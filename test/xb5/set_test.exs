@@ -27,7 +27,8 @@ defmodule Xb5SetTest do
         elements_to_repeat = ref_elements |> TU.list_shuffle() |> Enum.take(amount)
 
         Enum.each(elements_to_repeat, fn elem_to_repeat ->
-          list = TU.add_to_sorted_list(TU.randomly_switch_number_type(elem_to_repeat), ref_elements)
+          list =
+            TU.add_to_sorted_list(TU.randomly_switch_number_type(elem_to_repeat), ref_elements)
 
           set = Xb5.Set.new(list)
           assert Xb5.Set.size(set) == size

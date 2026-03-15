@@ -28,10 +28,10 @@ defmodule Xb5.Tree do
   end
 
   # TODO
-  #@spec equal?(t(), t()) :: boolean()
-  #def equal?(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
+  # @spec equal?(t(), t()) :: boolean()
+  # def equal?(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
   #  :xb5_trees_node.is_equal(size1, root1, size2, root2)
-  #end
+  # end
 
   @spec fetch(t(), key()) :: {:ok, value()} | :error
   def fetch(%__MODULE__{root: root}, key) do
@@ -61,12 +61,12 @@ defmodule Xb5.Tree do
   end
 
   @spec get_and_update(
-    t(),
-    key(),
-    (value() | nil -> {current_value, new_value :: value()} | :pop)
-  ) ::
-  {current_value, new_tree :: t()}
-  when current_value: value()
+          t(),
+          key(),
+          (value() | nil -> {current_value, new_value :: value()} | :pop)
+        ) ::
+          {current_value, new_tree :: t()}
+        when current_value: value()
   def get_and_update(%__MODULE__{root: root} = tree, key, fun) do
     case :xb5_trees_node.get_att(key, root, &fetch_found/2, &fetch_not_found/1) do
       {:ok, value} ->
@@ -84,6 +84,7 @@ defmodule Xb5.Tree do
 
       :error ->
         value = nil
+
         case fun.(value) do
           {current_value, new_value} ->
             root = :xb5_trees_node.insert_att(key, :eager, new_value, root)
@@ -97,12 +98,12 @@ defmodule Xb5.Tree do
   end
 
   @spec get_and_update!(
-    t(),
-    key(),
-    (value() -> {current_value, new_value :: value()} | :pop)
-  ) ::
-  {current_value, t()}
-  when current_value: value()
+          t(),
+          key(),
+          (value() -> {current_value, new_value :: value()} | :pop)
+        ) ::
+          {current_value, t()}
+        when current_value: value()
   def get_and_update!(%__MODULE__{root: root} = tree, key, fun) do
     value = :xb5_trees_node.get_att(key, root, &fetch_bang_found/2, &fetch_bang_not_found/1)
 
@@ -129,7 +130,7 @@ defmodule Xb5.Tree do
     :xb5_trees_node.get_att(key, root, &has_key_found/2, &has_key_not_found/1)
   end
 
-  #@spec intersect(t(), t()) :: t()
+  # @spec intersect(t(), t()) :: t()
   # TODO
 
   # @spec intersect(t(), t(), (key(), value(), value() -> value())) :: t()
@@ -201,7 +202,7 @@ defmodule Xb5.Tree do
   end
 
   @spec pop(t(), key(), default) :: {value(), updated_map :: t()} | {default, t()}
-when default: value()
+        when default: value()
   def pop(tree, key, default \\ nil)
 
   def pop(%__MODULE__{size: size, root: root} = tree, key, default) do
@@ -324,7 +325,7 @@ when default: value()
   end
 
   @spec replace_lazy(t(), key(), (existing_value :: value() -> new_value :: value())) ::
-  t()
+          t()
   def replace_lazy(%__MODULE__{root: root} = tree, key, fun) do
     case :xb5_trees_node.update_att(key, :lazy, fun, root) do
       :badkey ->
@@ -379,7 +380,9 @@ when default: value()
   def take(%__MODULE__{root: root}, keys) do
     keys
     |> :lists.usort()
-    |> Enum.map(fn key -> :xb5_trees_node.get_att(key, root, &take_get_found/2, &take_get_not_found/1) end)
+    |> Enum.map(fn key ->
+      :xb5_trees_node.get_att(key, root, &take_get_found/2, &take_get_not_found/1)
+    end)
     |> Enum.filter(&(&1 !== nil))
     |> from_orddict()
   end
@@ -390,12 +393,12 @@ when default: value()
   end
 
   @spec update(
-    t(),
-    key(),
-    default :: value(),
-    (existing_value :: value() -> new_value :: value())
-  ) ::
-  t()
+          t(),
+          key(),
+          default :: value(),
+          (existing_value :: value() -> new_value :: value())
+        ) ::
+          t()
   def update(%__MODULE__{root: root, size: size} = tree, key, default, fun) do
     case :xb5_trees_node.update_att(key, :lazy, fun, root) do
       :badkey ->
@@ -408,7 +411,7 @@ when default: value()
   end
 
   @spec update!(t(), key(), (existing_value :: value() -> new_value :: value())) ::
-  t()
+          t()
   def update!(%__MODULE__{root: root} = tree, key, fun) do
     case :xb5_trees_node.update_att(key, :lazy, fun, root) do
       :badkey ->
@@ -462,7 +465,7 @@ when default: value()
   ##
 
   defp fetch_bang_found(_key, value), do: value
-  defp fetch_bang_not_found(key), do: (raise KeyError, key)
+  defp fetch_bang_not_found(key), do: raise(KeyError, key)
 
   ##
 
@@ -541,7 +544,12 @@ when default: value()
     end
 
     def member?(%Xb5.Tree{root: root}, {key, value}) do
-      :xb5_trees_node.get_att(key, root, &member_get_found(&1, &2, key, value), &member_get_not_found/1)
+      :xb5_trees_node.get_att(
+        key,
+        root,
+        &member_get_found(&1, &2, key, value),
+        &member_get_not_found/1
+      )
     end
 
     def slice(tree) do
@@ -559,7 +567,7 @@ when default: value()
 
     defp member_get_found(tree_key, tree_value, queried_key, queried_value) do
       # FIXME is this consistent with non-strict comparisons elsewhere?
-      (tree_key === queried_key) and (tree_value === queried_value)
+      tree_key === queried_key and tree_value === queried_value
     end
 
     defp member_get_not_found(_key) do
