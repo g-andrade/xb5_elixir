@@ -1,0 +1,584 @@
+defmodule Xb5SetTest do
+  use ExUnit.Case, async: true
+
+  alias Xb5TestUtils, as: TU
+  alias Xb5SetTestUtils, as: STU
+
+  # ---------------------------------------------------------------------------
+  # Basic API
+  # ---------------------------------------------------------------------------
+
+  describe "construction" do
+    test "from enumerable matches element-wise insertion and size" do
+      STU.foreach_tested_size(fn size, ref_elements ->
+        set = Xb5.Set.new(ref_elements)
+        assert Xb5.Set.to_list(set) == ref_elements
+        assert Xb5.Set.size(set) == size
+
+        assert Xb5.Set.to_list(STU.new_set_from_each_inserted(ref_elements)) == ref_elements
+      end)
+    end
+  end
+
+  describe "construction_repeated" do
+    test "inserting existing elements does not change size or contents" do
+      STU.foreach_tested_size(fn size, ref_elements ->
+        amount = min(length(ref_elements), 50)
+        elements_to_repeat = ref_elements |> TU.list_shuffle() |> Enum.take(amount)
+
+        Enum.each(elements_to_repeat, fn elem_to_repeat ->
+          list = TU.add_to_sorted_list(TU.randomly_switch_number_type(elem_to_repeat), ref_elements)
+
+          set = Xb5.Set.new(list)
+          assert Xb5.Set.size(set) == size
+          assert Xb5.Set.to_list(set) == ref_elements
+
+          set_shuffled = Xb5.Set.new(TU.list_shuffle(list))
+          assert Xb5.Set.size(set_shuffled) == size
+          assert Xb5.Set.to_list(set_shuffled) == ref_elements
+        end)
+      end)
+    end
+  end
+
+  describe "member?" do
+    test "existing elements are found, absent elements are not" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        TU.foreach_existing_element(
+          fn elem -> assert Xb5.Set.member?(set, elem) end,
+          ref_elements,
+          size
+        )
+
+        TU.foreach_non_existent_element(
+          fn elem -> refute Xb5.Set.member?(set, elem) end,
+          ref_elements,
+          100
+        )
+      end)
+    end
+  end
+
+  describe "put" do
+    test "putting an existing element is a no-op; putting a new one grows the set" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        TU.foreach_existing_element(
+          fn elem ->
+            set2 = Xb5.Set.put(set, elem)
+            assert Xb5.Set.size(set2) == size
+            assert Xb5.Set.to_list(set2) == ref_elements
+          end,
+          ref_elements,
+          min(50, size)
+        )
+
+        TU.foreach_non_existent_element(
+          fn elem ->
+            set2 = Xb5.Set.put(set, elem)
+            assert Xb5.Set.size(set2) == size + 1
+            assert Xb5.Set.to_list(set2) == TU.add_to_sorted_list(elem, ref_elements)
+          end,
+          ref_elements,
+          50
+        )
+      end)
+    end
+  end
+
+  describe "delete_sequential" do
+    test "deletes elements one by one in order, interleaved with absent-key checks" do
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        delete_keys = Enum.map(ref_elements, &TU.randomly_switch_number_type/1)
+
+        {set_n, []} =
+          Enum.reduce(delete_keys, {set, ref_elements}, fn elem, {set1, remaining1} ->
+            check_delete_absent(set1, remaining1, 3)
+
+            set2 = Xb5.Set.delete(set1, elem)
+            remaining2 = TU.remove_from_sorted_list(elem, remaining1)
+            assert Xb5.Set.to_list(set2) == remaining2
+            assert Xb5.Set.size(set2) == length(remaining2)
+
+            {set2, remaining2}
+          end)
+
+        assert Xb5.Set.to_list(set_n) == []
+        assert Xb5.Set.size(set_n) == 0
+
+        check_delete_absent(set_n, [], 3)
+      end)
+    end
+  end
+
+  describe "delete_shuffled" do
+    test "deletes elements in random order, interleaved with absent-key checks" do
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        delete_keys =
+          ref_elements
+          |> TU.list_shuffle()
+          |> Enum.map(&TU.randomly_switch_number_type/1)
+
+        {set_n, []} =
+          Enum.reduce(delete_keys, {set, ref_elements}, fn elem, {set1, remaining1} ->
+            check_delete_absent(set1, remaining1, 3)
+
+            set2 = Xb5.Set.delete(set1, elem)
+            remaining2 = TU.remove_from_sorted_list(elem, remaining1)
+            assert Xb5.Set.to_list(set2) == remaining2
+            assert Xb5.Set.size(set2) == length(remaining2)
+
+            {set2, remaining2}
+          end)
+
+        assert Xb5.Set.to_list(set_n) == []
+        assert Xb5.Set.size(set_n) == 0
+
+        check_delete_absent(set_n, [], 3)
+      end)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Smaller and Larger
+  # ---------------------------------------------------------------------------
+
+  describe "smallest!" do
+    test "raises on empty set, returns smallest element otherwise" do
+      STU.foreach_test_set(fn
+        0, _ref_elements, set ->
+          assert_raise ArgumentError, fn -> Xb5.Set.smallest!(set) end
+
+        _size, ref_elements, set ->
+          assert Xb5.Set.smallest!(set) == hd(ref_elements)
+      end)
+    end
+  end
+
+  describe "largest!" do
+    test "raises on empty set, returns largest element otherwise" do
+      STU.foreach_test_set(fn
+        0, _ref_elements, set ->
+          assert_raise ArgumentError, fn -> Xb5.Set.largest!(set) end
+
+        _size, ref_elements, set ->
+          assert Xb5.Set.largest!(set) == List.last(ref_elements)
+      end)
+    end
+  end
+
+  describe "smaller" do
+    test "returns the nearest element strictly below the query, or :error" do
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        run_smaller(ref_elements, set)
+      end)
+    end
+  end
+
+  describe "larger" do
+    test "returns the nearest element strictly above the query, or :error" do
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        run_larger(ref_elements, set)
+      end)
+    end
+  end
+
+  describe "pop_smallest!" do
+    test "raises on empty set, repeatedly pops smallest element in order" do
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        run_pop_smallest(ref_elements, set)
+      end)
+    end
+  end
+
+  describe "pop_largest!" do
+    test "raises on empty set, repeatedly pops largest element in order" do
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        run_pop_largest(Enum.reverse(ref_elements), set)
+      end)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Set Operations
+  # ---------------------------------------------------------------------------
+
+  describe "difference" do
+    test "self-difference is empty; general difference matches ordsets:subtract" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        self_diff = Xb5.Set.difference(set, set)
+        assert Xb5.Set.size(self_diff) == 0
+        assert Xb5.Set.to_list(self_diff) == []
+
+        STU.foreach_second_set(
+          fn ref_elements2, set2 ->
+            difference = Xb5.Set.difference(set, set2)
+
+            expected =
+              :ordsets.subtract(
+                :ordsets.from_list(ref_elements),
+                :ordsets.from_list(ref_elements2)
+              )
+
+            assert Xb5.Set.size(difference) == :ordsets.size(expected)
+            assert Xb5.Set.to_list(difference) == :ordsets.to_list(expected)
+          end,
+          size,
+          ref_elements
+        )
+      end)
+    end
+  end
+
+  describe "intersection" do
+    test "self-intersection is identity; general intersection matches ordsets:intersection" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        self_intersect = Xb5.Set.intersection(set, set)
+        assert Xb5.Set.size(self_intersect) == size
+        assert Xb5.Set.to_list(self_intersect) == ref_elements
+
+        STU.foreach_second_set(
+          fn ref_elements2, set2 ->
+            intersection = Xb5.Set.intersection(set, set2)
+
+            expected =
+              :ordsets.intersection(
+                :ordsets.from_list(ref_elements),
+                :ordsets.from_list(ref_elements2)
+              )
+
+            assert Xb5.Set.size(intersection) == :ordsets.size(expected)
+            assert Xb5.Set.to_list(intersection) == :ordsets.to_list(expected)
+          end,
+          size,
+          ref_elements
+        )
+      end)
+    end
+  end
+
+  describe "disjoint?" do
+    test "set is disjoint with itself iff empty; general case matches ordsets:is_disjoint" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        assert Xb5.Set.disjoint?(set, set) == (size == 0)
+
+        STU.foreach_second_set(
+          fn ref_elements2, set2 ->
+            is_disjoint = Xb5.Set.disjoint?(set, set2)
+
+            expected =
+              :ordsets.is_disjoint(
+                :ordsets.from_list(ref_elements),
+                :ordsets.from_list(ref_elements2)
+              )
+
+            assert is_disjoint == expected
+            assert Xb5.Set.disjoint?(set2, set) == expected
+          end,
+          size,
+          ref_elements
+        )
+      end)
+    end
+  end
+
+  describe "equal?" do
+    test "set equals itself; general case matches list equality" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        assert Xb5.Set.equal?(set, set)
+
+        STU.foreach_second_set(
+          fn ref_elements2, set2 ->
+            is_equal = Xb5.Set.equal?(set, set2)
+            assert is_equal == (ref_elements == ref_elements2)
+            assert Xb5.Set.equal?(set2, set) == is_equal
+          end,
+          size,
+          ref_elements
+        )
+      end)
+    end
+  end
+
+  describe "subset?" do
+    test "set is a subset of itself; general case matches ordsets:is_subset" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        assert Xb5.Set.subset?(set, set)
+
+        STU.foreach_second_set(
+          fn ref_elements2, set2 ->
+            is_subset = Xb5.Set.subset?(set, set2)
+
+            expected =
+              :ordsets.is_subset(
+                :ordsets.from_list(ref_elements),
+                :ordsets.from_list(ref_elements2)
+              )
+
+            assert is_subset == expected
+
+            if Xb5.Set.size(set) == Xb5.Set.size(set2) do
+              assert Xb5.Set.subset?(set2, set) == is_subset
+            end
+          end,
+          size,
+          ref_elements
+        )
+      end)
+    end
+  end
+
+  describe "union" do
+    test "self-union is identity; general union matches :lists.usort of concatenation" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        self_union = Xb5.Set.union(set, set)
+        assert Xb5.Set.size(self_union) == size
+        assert Xb5.Set.to_list(self_union) == ref_elements
+
+        STU.foreach_second_set(
+          fn ref_elements2, set2 ->
+            expected = :lists.usort(ref_elements ++ ref_elements2)
+
+            union = Xb5.Set.union(set, set2)
+            assert Xb5.Set.size(union) == length(expected)
+            assert Xb5.Set.to_list(union) == expected
+
+            union2 = Xb5.Set.union(set2, set)
+            assert Xb5.Set.size(union2) == length(expected)
+            assert Xb5.Set.to_list(union2) == expected
+          end,
+          size,
+          ref_elements,
+          test_variants2: true
+        )
+      end)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Additional Functions
+  # ---------------------------------------------------------------------------
+
+  describe "filter" do
+    test "filtered set contains exactly the elements for which fun returns truthy" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        amounts_to_remove =
+          case size do
+            0 -> [0]
+            _ -> :lists.usort([0, 1, size, size - 1, :rand.uniform(size), :rand.uniform(size)])
+          end
+
+        Enum.each(amounts_to_remove, fn amount_to_remove ->
+          if size == 0 do
+            filtered = Xb5.Set.filter(set, fn _ -> raise "should not be called" end)
+            assert Xb5.Set.to_list(filtered) == []
+            assert Xb5.Set.size(filtered) == 0
+          else
+            elements_to_remove =
+              ref_elements |> TU.list_shuffle() |> Enum.take(amount_to_remove)
+
+            aux_set = :gb_sets.from_list(elements_to_remove)
+            filter_fun = fn e -> not :gb_sets.is_element(e, aux_set) end
+
+            filtered = Xb5.Set.filter(set, filter_fun)
+
+            expected = Enum.filter(ref_elements, filter_fun)
+            assert Xb5.Set.to_list(filtered) == expected
+            assert Xb5.Set.size(filtered) == length(expected)
+          end
+        end)
+      end)
+    end
+  end
+
+  describe "map" do
+    test "mapped set contains unique transformed elements, deduplicated and sorted" do
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        Enum.each([0.0, 0.2, 0.5, 0.7, 1.0], fn pct_mapped ->
+          phash_range = 100_000
+          phash_ceiling = round(pct_mapped * phash_range)
+          random_factor = :rand.uniform()
+
+          map_fun = fn e ->
+            canon_e = TU.canon_element(e)
+
+            if :erlang.phash2(canon_e, phash_range) < phash_ceiling do
+              :erlang.phash2([random_factor | canon_e], 3)
+            else
+              e
+            end
+          end
+
+          mapped_set = Xb5.Set.map(set, map_fun)
+          expected = ref_elements |> Enum.map(map_fun) |> :lists.usort()
+
+          assert Xb5.Set.size(mapped_set) == length(expected)
+          assert Xb5.Set.to_list(mapped_set) == expected
+        end)
+      end)
+    end
+  end
+
+  describe "new/1 with native Erlang xb5_sets term" do
+    test "round-trips through :xb5_sets.wrap/unwrap" do
+      assert {:error, _} = :xb5_sets.unwrap(:xb5_bag.new())
+      assert {:error, _} = :xb5_sets.unwrap(:xb5_trees.new())
+      assert {:error, _} = :xb5_sets.unwrap({:xb5_set, -1, :xb5_sets_node.new()})
+      assert {:error, _} = :xb5_sets.unwrap({:xb5_set, 2, :xb5_sets_node.new()})
+      assert {:error, _} = :xb5_sets.unwrap({:xb5_set, 2, make_ref()})
+
+      STU.foreach_test_set(fn _size, _ref_elements, set ->
+        erlang_set = :xb5_sets.wrap(%{size: set.size, root: set.root})
+
+        set2 = Xb5.Set.new(erlang_set)
+
+        assert set2 == set
+      end)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
+  # Private helpers
+  # ---------------------------------------------------------------------------
+
+  # Generates `amount` non-member elements and asserts delete is idempotent.
+  # (Erlang's xb5_sets:delete raises on missing key; Xb5.Set.delete is idempotent.)
+  defp check_delete_absent(_set, _remaining, 0), do: :ok
+
+  defp check_delete_absent(set, remaining, amount) do
+    elem = TU.new_element()
+
+    if Enum.any?(remaining, &(&1 == elem)) do
+      check_delete_absent(set, remaining, amount)
+    else
+      assert Xb5.Set.delete(set, elem) == set
+      check_delete_absent(set, remaining, amount - 1)
+    end
+  end
+
+  # -----
+
+  defp run_smaller([], set) do
+    elem = TU.new_element()
+    assert Xb5.Set.smaller(set, elem) == :error
+  end
+
+  defp run_smaller([single], set) do
+    assert Xb5.Set.smaller(set, TU.randomly_switch_number_type(single)) == :error
+
+    larger = TU.element_larger(single)
+    assert Xb5.Set.smaller(set, larger) == {:ok, single}
+
+    smaller = TU.element_smaller(single)
+    assert Xb5.Set.smaller(set, smaller) == :error
+  end
+
+  defp run_smaller([first | next], set) do
+    assert Xb5.Set.smaller(set, TU.randomly_switch_number_type(first)) == :error
+
+    smaller = TU.element_smaller(first)
+    assert Xb5.Set.smaller(set, smaller) == :error
+
+    run_smaller_recur(first, next, set)
+  end
+
+  defp run_smaller_recur(expected, [last], set) do
+    result = Xb5.Set.smaller(set, TU.randomly_switch_number_type(last))
+    assert result == {:ok, expected}
+
+    larger = TU.element_larger(last)
+    assert larger > last
+    assert Xb5.Set.smaller(set, larger) == {:ok, last}
+  end
+
+  defp run_smaller_recur(expected, [elem | next], set) do
+    assert Xb5.Set.smaller(set, TU.randomly_switch_number_type(elem)) == {:ok, expected}
+
+    case TU.element_in_between(expected, elem) do
+      {:found, in_between} ->
+        assert in_between > expected
+        assert in_between < elem
+        assert Xb5.Set.smaller(set, in_between) == {:ok, expected}
+
+      :none ->
+        :ok
+    end
+
+    run_smaller_recur(elem, next, set)
+  end
+
+  # -----
+
+  defp run_larger(ref_elements, set) do
+    case Enum.reverse(ref_elements) do
+      [] ->
+        elem = TU.new_element()
+        assert Xb5.Set.larger(set, elem) == :error
+
+      [single] ->
+        assert Xb5.Set.larger(set, single) == :error
+
+        larger = TU.element_larger(single)
+        assert Xb5.Set.larger(set, larger) == :error
+
+        smaller = TU.element_smaller(single)
+        assert Xb5.Set.larger(set, smaller) == {:ok, single}
+
+      [last | next] ->
+        assert Xb5.Set.larger(set, TU.randomly_switch_number_type(last)) == :error
+
+        larger = TU.element_larger(last)
+        assert Xb5.Set.larger(set, larger) == :error
+
+        run_larger_recur(last, next, set)
+    end
+  end
+
+  defp run_larger_recur(expected, [first], set) do
+    result = Xb5.Set.larger(set, TU.randomly_switch_number_type(first))
+    assert result == {:ok, expected}
+
+    smaller = TU.element_smaller(first)
+    assert smaller < first
+    assert Xb5.Set.larger(set, smaller) == {:ok, first}
+  end
+
+  defp run_larger_recur(expected, [elem | next], set) do
+    assert Xb5.Set.larger(set, TU.randomly_switch_number_type(elem)) == {:ok, expected}
+
+    case TU.element_in_between(elem, expected) do
+      {:found, in_between} ->
+        assert in_between < expected
+        assert in_between > elem
+        assert Xb5.Set.larger(set, in_between) == {:ok, expected}
+
+      :none ->
+        :ok
+    end
+
+    run_larger_recur(elem, next, set)
+  end
+
+  # -----
+
+  defp run_pop_smallest([expected | next], set) do
+    {taken, set2} = Xb5.Set.pop_smallest!(set)
+    assert taken == expected
+    assert Xb5.Set.size(set2) == length(next)
+    run_pop_smallest(next, set2)
+  end
+
+  defp run_pop_smallest([], set) do
+    assert_raise ArgumentError, fn -> Xb5.Set.pop_smallest!(set) end
+  end
+
+  defp run_pop_largest([expected | next], set) do
+    {taken, set2} = Xb5.Set.pop_largest!(set)
+    assert taken == expected
+    assert Xb5.Set.size(set2) == length(next)
+    run_pop_largest(next, set2)
+  end
+
+  defp run_pop_largest([], set) do
+    assert_raise ArgumentError, fn -> Xb5.Set.pop_largest!(set) end
+  end
+end

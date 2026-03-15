@@ -48,13 +48,34 @@ defmodule Xb5.Set do
     %__MODULE__{size: size, root: root}
   end
 
+  @doc "Returns the smallest element strictly greater than `element`, or `:error` if none exists."
+  @spec larger(t(val), val) :: {:ok, val} | :error when val: value()
+  def larger(%__MODULE__{root: root}, element) do
+    case :xb5_sets_node.larger(element, root) do
+      {:found, e} -> {:ok, e}
+      :none -> :error
+    end
+  end
+
   @spec largest!(t(val)) :: val when val: value()
   def largest!(%__MODULE__{size: size, root: root}) do
     if size === 0 do
-      raise "Empty Set"
+      raise ArgumentError, "set is empty"
     else
       :xb5_sets_node.largest(root)
     end
+  end
+
+  @doc """
+  Applies `fun` to each element and returns a new set built from the results.
+
+  Because the mapped elements may not be unique, they are deduplicated.
+  """
+  @spec map(t(a), (a -> b)) :: t(b) when a: value(), b: value()
+  def map(%__MODULE__{root: root}, fun) do
+    list = :xb5_sets_node.map_to_list(fun, root)
+    deduped = :lists.usort(list)
+    from_ordset(length(deduped), deduped)
   end
 
   @spec member?(t(), value()) :: boolean()
@@ -101,7 +122,7 @@ defmodule Xb5.Set do
   @spec pop_largest!(t(val)) :: {val, t(val)} when val: value()
   def pop_largest!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise "Empty Set"
+      raise ArgumentError, "set is empty"
     else
       [value | root] = :xb5_sets_node.take_largest(root)
       set = %{set | size: size - 1, root: root}
@@ -112,7 +133,7 @@ defmodule Xb5.Set do
   @spec pop_smallest!(t(val)) :: {val, t(val)} when val: value()
   def pop_smallest!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise "Empty Set"
+      raise ArgumentError, "set is empty"
     else
       [value | root] = :xb5_sets_node.take_smallest(root)
       set = %{set | size: size - 1, root: root}
@@ -141,10 +162,19 @@ defmodule Xb5.Set do
     size
   end
 
+  @doc "Returns the largest element strictly less than `element`, or `:error` if none exists."
+  @spec smaller(t(val), val) :: {:ok, val} | :error when val: value()
+  def smaller(%__MODULE__{root: root}, element) do
+    case :xb5_sets_node.smaller(element, root) do
+      {:found, e} -> {:ok, e}
+      :none -> :error
+    end
+  end
+
   @spec smallest!(t(val)) :: val when val: value()
   def smallest!(%__MODULE__{size: size, root: root}) do
     if size === 0 do
-      raise "Empty Set"
+      raise ArgumentError, "set is empty"
     else
       :xb5_sets_node.smallest(root)
     end
@@ -162,14 +192,15 @@ defmodule Xb5.Set do
     :xb5_sets_node.is_subset(size1, root1, size2, root2)
   end
 
-  # TODO
-  # @spec symmetric_difference(t(val1), t(val2)) :: t(val1 | val2) when val1: value(), val2: value()
-  # def symmetric_difference(set1, set2) do
-  #   :todo
-  # end
+  @doc """
+  Returns elements that are in either set, but not both.
 
-  # TODO
-  # def to_erlang? to_xb5?
+  Implemented as `union(difference(set1, set2), difference(set2, set1))`.
+  """
+  @spec symmetric_difference(t(val1), t(val2)) :: t(val1 | val2) when val1: value(), val2: value()
+  def symmetric_difference(set1, set2) do
+    union(difference(set1, set2), difference(set2, set1))
+  end
 
   @spec to_list(t(val)) :: [val] when val: value()
   def to_list(%__MODULE__{root: root}) do
