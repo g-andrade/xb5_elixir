@@ -234,7 +234,7 @@ defmodule Xb5.Tree do
         {value, tree}
 
       :badkey ->
-        raise KeyError, key
+        raise KeyError, term: tree, key: key
     end
   end
 
@@ -327,7 +327,7 @@ defmodule Xb5.Tree do
   def replace!(%__MODULE__{root: root} = tree, key, value) do
     case :xb5_trees_node.update_att(key, :eager, value, root) do
       :badkey ->
-        raise KeyError, key
+        raise KeyError, term: tree, key: key
 
       root ->
         %{tree | root: root}
@@ -424,7 +424,7 @@ defmodule Xb5.Tree do
   def update!(%__MODULE__{root: root} = tree, key, fun) do
     case :xb5_trees_node.update_att(key, :lazy, fun, root) do
       :badkey ->
-        raise KeyError, key
+        raise KeyError, term: tree, key: key
 
       root ->
         %{tree | root: root}

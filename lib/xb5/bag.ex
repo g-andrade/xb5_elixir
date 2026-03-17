@@ -10,7 +10,22 @@ defmodule Xb5.Bag do
 
   ## API
 
-  # TODO count, rank, etc
+  @spec count(t(value), value) :: non_neg_integer()
+  def count(value, %__MODULE__{size: size, root: root}) do
+    case :xb5_bag_node.rank(value, root) do
+      :none ->
+        0
+
+      rank ->
+        case :xb5_bag_node.rank_larger(value, root) do
+          [larger_rank | _] ->
+            larger_rank - rank
+
+          :none ->
+            size - rank + 1
+        end
+    end
+  end
 
   @spec delete(t(val1), val2) :: t(val1) when val1: value(), val2: value()
   def delete(%__MODULE__{size: size, root: root} = set, value) do
@@ -26,6 +41,50 @@ defmodule Xb5.Bag do
   @spec filter(t(a), (a -> as_boolean(term()))) :: t(a) when a: value()
   def filter(set, fun) do
     from_ordered_list(for elem <- to_list(set), fun.(elem), do: elem)
+  end
+
+  @spec fetch_index(t(value), value) :: {:ok, non_neg_integer} | :error
+  def fetch_index(%__MODULE__{root: root}, value) do
+    case :xb5_bag_node.rank(value, root) do
+      :none ->
+        :error
+
+      rank ->
+        {:ok, rank - 1}
+    end
+  end
+
+  @spec fetch_index!(t(value), value) :: non_neg_integer
+  def fetch_index!(%__MODULE__{root: root} = bag, value) do
+    case :xb5_bag_node.rank(value, root) do
+      :none ->
+        raise KeyError, term: bag, key: value
+
+      rank ->
+        rank - 1
+    end
+  end
+
+  @spec get_index(t(value), value, default) :: non_neg_integer | default when default: term
+  def get_index(bag, value, default \\ nil)
+
+  def get_index(%__MODULE__{root: root}, value, default) do
+    case :xb5_bag_node.rank(value, root) do
+      :none ->
+        default
+
+      rank ->
+        rank - 1
+    end
+  end
+
+  @doc "Returns the smallest element strictly greater than `element`, or `:error` if none exists."
+  @spec larger(t(val), val) :: {:ok, val} | :error when val: value()
+  def larger(%__MODULE__{root: root}, element) do
+    case :xb5_bag_node.larger(element, root) do
+      {:found, e} -> {:ok, e}
+      :none -> :error
+    end
   end
 
   @spec largest!(t(val)) :: val when val: value()
@@ -85,6 +144,37 @@ defmodule Xb5.Bag do
     end
   end
 
+  @spec percentile(t(value), percentile, opts) :: {:ok, value | interpolation_result} | :error
+        when percentile: :xb5_bag_utils.percentile(),
+             opts: [:xb5_bag_utils.percentile_bracket_opt()],
+             interpolation_result: number
+
+  def percentile(bag, percentile, opts \\ [])
+
+  def percentile(%__MODULE__{size: size, root: root}, percentile, opts) do
+    :xb5_bag_utils.percentile(percentile, size, root, opts)
+  end
+
+  @spec percentile_bracket(t(value), percentile, opts) :: percentile_bracket
+        when percentile: :xb5_bag_utils.percentile(),
+             opts: [:xb5_bag_utils.percentile_bracket_opt()],
+             percentile_bracket: :xb5_bag_utils.percentile_bracket(value)
+
+  def percentile_bracket(bag, percentile, opts \\ [])
+
+  def percentile_bracket(%__MODULE__{size: size, root: root}, percentile, opts) do
+    :xb5_bag_utils.percentile_bracket(percentile, size, root, opts)
+  end
+
+  @spec percentile_rank(t(value), value) :: float
+  def percentile_rank(%__MODULE__{size: size, root: root}, value) when size > 0 do
+    :xb5_bag_utils.percentile_rank(value, size, root)
+  end
+
+  def percentile_rank(%__MODULE__{}, _value) do
+    raise "Empty bag"
+  end
+
   @spec pop_largest!(t(val)) :: {val, t(val)} when val: value()
   def pop_largest!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
@@ -134,6 +224,15 @@ defmodule Xb5.Bag do
     size
   end
 
+  @doc "Returns the largest element strictly less than `element`, or `:error` if none exists."
+  @spec smaller(t(val), val) :: {:ok, val} | :error when val: value()
+  def smaller(%__MODULE__{root: root}, element) do
+    case :xb5_bag_node.smaller(element, root) do
+      {:found, e} -> {:ok, e}
+      :none -> :error
+    end
+  end
+
   @spec smallest!(t(val)) :: val when val: value()
   def smallest!(%__MODULE__{size: size, root: root}) do
     if size === 0 do
@@ -175,8 +274,7 @@ defmodule Xb5.Bag do
 
     def slice(bag) do
       size = Xb5.Bag.size(bag)
-      # {:ok, size, &slicing_fun(bag, &1, &2, &3)}
-      {:ok, size, &Xb5.Bag.to_list/1}
+      {:ok, size, &slicing_fun(bag, &1, &2, &3)}
     end
 
     def reduce(set, acc, fun) do
@@ -187,36 +285,33 @@ defmodule Xb5.Bag do
 
     ## Internal
 
-    # defp slicing_fun(bag, start, length, step) do
-    #  %{root: root} = Xb5.Bag.unwrap(bag)
-    #  starting_value = :xb5_bag_node.nth(start + 1, root)
-    #  # FIXME doesn't work with duplicate elements, since the iterator may
-    #  # start at the wrong position
-    #  iterator = :xb5_bag_node.iterator_from(starting_value, root, :ordered)
-    #  slice_recur(iterator, length, step, 1)
-    # end
+    defp slicing_fun(bag, start, length, step) do
+      %{size: bag_size, root: bag_root} = Xb5.Bag.unwrap(bag)
+      iterator = :xb5_bag_node.iterator_from_nth(start + 1, bag_size, bag_root, :ordered)
+      slice_recur(iterator, length, step, 1)
+    end
 
-    # defp slice_recur(iterator, length, step, substep) when length > 0 do
-    #  {value, iterator} = :xb5_bag_node.next(iterator)
+    defp slice_recur(iterator, length, step, substep) when length > 0 do
+      {value, iterator} = :xb5_bag_node.next(iterator)
 
-    #  cond do
-    #    substep === 1 and substep < step ->
-    #      [value | slice_recur(iterator, length, step, substep + 1)]
+      cond do
+        substep === 1 and substep < step ->
+          [value | slice_recur(iterator, length, step, substep + 1)]
 
-    #    substep === 1 ->
-    #      [value | slice_recur(iterator, length - 1, step, 1)]
+        substep === 1 ->
+          [value | slice_recur(iterator, length - 1, step, 1)]
 
-    #    substep < step ->
-    #      slice_recur(iterator, length, step, substep + 1)
+        substep < step ->
+          slice_recur(iterator, length, step, substep + 1)
 
-    #    substep === step ->
-    #      slice_recur(iterator, length - 1, step, 1)
-    #  end
-    # end
+        substep === step ->
+          slice_recur(iterator, length - 1, step, 1)
+      end
+    end
 
-    # defp slice_recur(_iterator, 0, _step, _substep) do
-    #  []
-    # end
+    defp slice_recur(_iterator, 0, _step, _substep) do
+      []
+    end
   end
 
   ## Protocols - Collectable
