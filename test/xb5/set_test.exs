@@ -582,4 +582,95 @@ defmodule Xb5SetTest do
   defp run_pop_largest([], set) do
     assert_raise ArgumentError, fn -> Xb5.Set.pop_largest!(set) end
   end
+
+  # ---------------------------------------------------------------------------
+  # Protocol coverage
+  # ---------------------------------------------------------------------------
+
+  describe "additional Set API" do
+    test "reject keeps elements for which fun is falsy" do
+      set = Xb5.Set.new([1, 2, 3, 4])
+      set2 = Xb5.Set.reject(set, fn x -> x > 2 end)
+      assert Xb5.Set.to_list(set2) == [1, 2]
+    end
+
+    test "symmetric_difference gives elements in exactly one set" do
+      s1 = Xb5.Set.new([1, 2, 3])
+      s2 = Xb5.Set.new([2, 3, 4])
+      result = Xb5.Set.symmetric_difference(s1, s2)
+      assert Xb5.Set.to_list(result) == [1, 4]
+    end
+
+    test "split_with partitions by predicate" do
+      set = Xb5.Set.new([1, 2, 3, 4])
+      {t1, t2} = Xb5.Set.split_with(set, fn x -> x > 2 end)
+      assert Xb5.Set.to_list(t1) == [3, 4]
+      assert Xb5.Set.to_list(t2) == [1, 2]
+    end
+
+    test "new/2 with transform" do
+      set = Xb5.Set.new([3, 1, 2], fn x -> x * 10 end)
+      assert Xb5.Set.to_list(set) == [10, 20, 30]
+    end
+
+    test "new/2 with Erlang term and transform" do
+      base = Xb5.Set.new([1, 2, 3])
+      erlang_set = :xb5_sets.wrap(Xb5.Set.unwrap(base))
+      set = Xb5.Set.new(erlang_set, fn x -> x * 2 end)
+      assert Xb5.Set.to_list(set) == [2, 4, 6]
+    end
+  end
+
+  describe "Enumerable protocol" do
+    test "Enum.count returns size" do
+      set = Xb5.Set.new([1, 2, 3])
+      assert Enum.count(set) == 3
+    end
+
+    test "Enum.member? checks membership" do
+      set = Xb5.Set.new([1, 2, 3])
+      assert Enum.member?(set, 2)
+      refute Enum.member?(set, 99)
+    end
+
+    test "Enum.to_list returns sorted elements" do
+      set = Xb5.Set.new([3, 1, 2])
+      assert Enum.to_list(set) == [1, 2, 3]
+    end
+
+    test "Enum.slice returns a range of elements" do
+      set = Xb5.Set.new([1, 2, 3, 4, 5])
+      assert Enum.slice(set, 1, 3) == [2, 3, 4]
+    end
+  end
+
+  describe "Collectable protocol" do
+    test "Enum.into inserts elements into existing set" do
+      base = Xb5.Set.new([1])
+      result = Enum.into([2, 3], base)
+      assert Xb5.Set.to_list(result) == [1, 2, 3]
+    end
+
+    test "for comprehension with into builds a set" do
+      result = for n <- [3, 1, 2], into: Xb5.Set.new(), do: n
+      assert Xb5.Set.to_list(result) == [1, 2, 3]
+    end
+
+    test "halt branch via Stream.take_while" do
+      result =
+        [1, 2, 3, 4, 5]
+        |> Stream.into(Xb5.Set.new())
+        |> Enum.take(2)
+
+      assert result == [1, 2]
+    end
+  end
+
+  describe "Inspect protocol" do
+    test "inspect produces readable output" do
+      set = Xb5.Set.new([1, 2])
+      inspected = inspect(set)
+      assert String.starts_with?(inspected, "Xb5.Set.new(")
+    end
+  end
 end

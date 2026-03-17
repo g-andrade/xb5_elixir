@@ -213,6 +213,12 @@ defmodule Xb5.Set do
     %__MODULE__{size: size, root: root}
   end
 
+  @doc "Converts the set to a plain map `%{size: n, root: node}` for Erlang interop."
+  @spec unwrap(t(val)) :: :xb5_sets.unwrapped_set(val) when val: value()
+  def unwrap(%__MODULE__{size: size, root: root}) do
+    %{size: size, root: root}
+  end
+
   ## Internal
 
   defp from_ordset(ordset) do

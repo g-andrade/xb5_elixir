@@ -10,8 +10,16 @@ defmodule Xb5.Bag do
 
   ## API
 
+  @doc "Adds `value` to the bag, always inserting a new copy even if already present."
+  @spec add(t(val), new_val) :: t(val | new_val) when val: value(), new_val: value()
+  def add(%__MODULE__{size: size, root: root} = set, value) do
+    root = :xb5_bag_node.add(value, root)
+    %{set | size: size + 1, root: root}
+  end
+
+  @doc "Returns the number of times `value` appears in the bag."
   @spec count(t(value), value) :: non_neg_integer()
-  def count(value, %__MODULE__{size: size, root: root}) do
+  def count(%__MODULE__{size: size, root: root}, value) do
     case :xb5_bag_node.rank(value, root) do
       :none ->
         0
@@ -27,6 +35,7 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Removes one occurrence of `value` from the bag. Returns the bag unchanged if `value` is not present."
   @spec delete(t(val1), val2) :: t(val1) when val1: value(), val2: value()
   def delete(%__MODULE__{size: size, root: root} = set, value) do
     case :xb5_bag_node.delete_att(value, root) do
@@ -38,11 +47,7 @@ defmodule Xb5.Bag do
     end
   end
 
-  @spec filter(t(a), (a -> as_boolean(term()))) :: t(a) when a: value()
-  def filter(set, fun) do
-    from_ordered_list(for elem <- to_list(set), fun.(elem), do: elem)
-  end
-
+  @doc "Returns the 0-based index (rank) of `value` in the bag, or `:error` if not present."
   @spec fetch_index(t(value), value) :: {:ok, non_neg_integer} | :error
   def fetch_index(%__MODULE__{root: root}, value) do
     case :xb5_bag_node.rank(value, root) do
@@ -54,6 +59,7 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Returns the 0-based index (rank) of `value` in the bag. Raises `KeyError` if not present."
   @spec fetch_index!(t(value), value) :: non_neg_integer
   def fetch_index!(%__MODULE__{root: root} = bag, value) do
     case :xb5_bag_node.rank(value, root) do
@@ -65,6 +71,13 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Returns a new bag containing only elements for which `fun` returns a truthy value."
+  @spec filter(t(a), (a -> as_boolean(term()))) :: t(a) when a: value()
+  def filter(set, fun) do
+    from_ordered_list(for elem <- to_list(set), fun.(elem), do: elem)
+  end
+
+  @doc "Returns the 0-based index (rank) of `value` in the bag, or `default` if not present."
   @spec get_index(t(value), value, default) :: non_neg_integer | default when default: term
   def get_index(bag, value, default \\ nil)
 
@@ -87,20 +100,23 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Returns the largest element in the bag. Raises `ArgumentError` if the bag is empty."
   @spec largest!(t(val)) :: val when val: value()
   def largest!(%__MODULE__{size: size, root: root}) do
     if size === 0 do
-      raise "Empty Bag"
+      raise ArgumentError, "bag is empty"
     else
       :xb5_bag_node.largest(root)
     end
   end
 
+  @doc "Returns `true` if `value` is present in the bag, `false` otherwise."
   @spec member?(t(), value()) :: boolean()
   def member?(%__MODULE__{root: root}, value) do
     :xb5_bag_node.is_member(value, root)
   end
 
+  @doc "Merges two bags into a new bag containing all elements from both, preserving duplicates."
   @spec merge(t(val1), t(val2)) :: t(val1 | val2) when val1: value(), val2: value()
   def merge(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
     size = size1 + size2
@@ -108,6 +124,7 @@ defmodule Xb5.Bag do
     %__MODULE__{size: size, root: root}
   end
 
+  @doc "Creates a new empty bag, or builds a bag from an Erlang `xb5_bag` term or an enumerable."
   @spec new() :: t()
   def new() do
     %__MODULE__{size: 0, root: :xb5_bag_node.new()}
@@ -144,6 +161,7 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Returns the percentile value for the given `percentile` (0.0–1.0) using the given method options. Returns `{:value, x}` or `:none`."
   @spec percentile(t(value), percentile, opts) :: {:ok, value | interpolation_result} | :error
         when percentile: :xb5_bag_utils.percentile(),
              opts: [:xb5_bag_utils.percentile_bracket_opt()],
@@ -155,6 +173,7 @@ defmodule Xb5.Bag do
     :xb5_bag_utils.percentile(percentile, size, root, opts)
   end
 
+  @doc "Returns the percentile bracket for the given `percentile`. Returns `{:exact, x}`, `{:between, low, high}`, or `:none`."
   @spec percentile_bracket(t(value), percentile, opts) :: percentile_bracket
         when percentile: :xb5_bag_utils.percentile(),
              opts: [:xb5_bag_utils.percentile_bracket_opt()],
@@ -166,19 +185,21 @@ defmodule Xb5.Bag do
     :xb5_bag_utils.percentile_bracket(percentile, size, root, opts)
   end
 
+  @doc "Returns the percentile rank of `value` in the bag as a float in 0.0–1.0. Raises `ArgumentError` if the bag is empty."
   @spec percentile_rank(t(value), value) :: float
   def percentile_rank(%__MODULE__{size: size, root: root}, value) when size > 0 do
     :xb5_bag_utils.percentile_rank(value, size, root)
   end
 
   def percentile_rank(%__MODULE__{}, _value) do
-    raise "Empty bag"
+    raise ArgumentError, "bag is empty"
   end
 
+  @doc "Removes and returns the largest element. Raises `ArgumentError` if the bag is empty."
   @spec pop_largest!(t(val)) :: {val, t(val)} when val: value()
   def pop_largest!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise "Empty Bag"
+      raise ArgumentError, "bag is empty"
     else
       [value | root] = :xb5_bag_node.take_largest(root)
       set = %{set | size: size - 1, root: root}
@@ -186,10 +207,11 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Removes and returns the smallest element. Raises `ArgumentError` if the bag is empty."
   @spec pop_smallest!(t(val)) :: {val, t(val)} when val: value()
   def pop_smallest!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise "Empty Bag"
+      raise ArgumentError, "bag is empty"
     else
       [value | root] = :xb5_bag_node.take_smallest(root)
       set = %{set | size: size - 1, root: root}
@@ -197,14 +219,9 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Adds `value` to the bag only if it is not already present. Returns the bag unchanged if `value` is present."
   @spec put(t(val), new_val) :: t(val | new_val) when val: value(), new_val: value()
   def put(%__MODULE__{size: size, root: root} = set, value) do
-    root = :xb5_bag_node.add(value, root)
-    %{set | size: size + 1, root: root}
-  end
-
-  @spec put_new(t(val), new_val) :: t(val | new_val) when val: value(), new_val: value()
-  def put_new(%__MODULE__{size: size, root: root} = set, value) do
     case :xb5_bag_node.insert_att(value, root) do
       :key_exists ->
         set
@@ -214,11 +231,13 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Returns a new bag containing only elements for which `fun` returns a falsy value."
   @spec reject(t(a), (a -> as_boolean(term()))) :: t(a) when a: value()
   def reject(set, fun) do
     from_ordered_list(for elem <- to_list(set), !fun.(elem), do: elem)
   end
 
+  @doc "Returns the number of elements in the bag, counting duplicates."
   @spec size(t()) :: non_neg_integer()
   def size(%__MODULE__{size: size}) do
     size
@@ -233,20 +252,23 @@ defmodule Xb5.Bag do
     end
   end
 
+  @doc "Returns the smallest element in the bag. Raises `ArgumentError` if the bag is empty."
   @spec smallest!(t(val)) :: val when val: value()
   def smallest!(%__MODULE__{size: size, root: root}) do
     if size === 0 do
-      raise "Empty Bag"
+      raise ArgumentError, "bag is empty"
     else
       :xb5_bag_node.smallest(root)
     end
   end
 
+  @doc "Returns all elements as a sorted list, with duplicates."
   @spec to_list(t(val)) :: [val] when val: value()
   def to_list(%__MODULE__{root: root}) do
     :xb5_bag_node.to_list(root)
   end
 
+  @doc "Converts the bag to a plain map `%{size: n, root: node}` for Erlang interop."
   @spec unwrap(t(val)) :: :xb5_bag.unwrapped_bag(val) when val: value()
   def unwrap(%__MODULE__{size: size, root: root}) do
     %{size: size, root: root}
