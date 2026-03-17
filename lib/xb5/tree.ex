@@ -27,11 +27,10 @@ defmodule Xb5.Tree do
     drop_recur(size, root, keys)
   end
 
-  # TODO
-  # @spec equal?(t(), t()) :: boolean()
-  # def equal?(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
-  #  :xb5_trees_node.is_equal(size1, root1, size2, root2)
-  # end
+  @spec equal?(t(), t()) :: boolean()
+  def equal?(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
+    :xb5_trees_node.is_equal(size1, root1, size2, root2)
+  end
 
   @spec fetch(t(), key()) :: {:ok, value()} | :error
   def fetch(%__MODULE__{root: root}, key) do
@@ -130,11 +129,17 @@ defmodule Xb5.Tree do
     :xb5_trees_node.get_att(key, root, &has_key_found/2, &has_key_not_found/1)
   end
 
-  # @spec intersect(t(), t()) :: t()
-  # TODO
+  @spec intersect(t(), t()) :: t()
+  def intersect(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
+    [size | root] = :xb5_trees_node.intersect(size1, root1, size2, root2)
+    %__MODULE__{size: size, root: root}
+  end
 
-  # @spec intersect(t(), t(), (key(), value(), value() -> value())) :: t()
-  # TODO
+  @spec intersect(t(), t(), (key(), value(), value() -> value())) :: t()
+  def intersect(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}, fun) do
+    [size | root] = :xb5_trees_node.intersect_with(fun, size1, root1, size2, root2)
+    %__MODULE__{size: size, root: root}
+  end
 
   @spec keys(t()) :: [key()]
   def keys(%__MODULE__{root: root}) do
@@ -144,7 +149,6 @@ defmodule Xb5.Tree do
   @doc "Returns the smallest element strictly greater than `element`, or `:error` if none exists."
   @spec larger(t(key, value), key) :: {key, value} | :error
   def larger(%__MODULE__{root: root}, key) do
-    # FIXME
     case :xb5_trees_node.larger(key, root) do
       {_, _} = found -> found
       :none -> :error
@@ -160,11 +164,17 @@ defmodule Xb5.Tree do
     end
   end
 
-  # @spec merge(t(), t()) :: t()
-  # TODO
+  @spec merge(t(), t()) :: t()
+  def merge(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
+    [size | root] = :xb5_trees_node.merge(size1, root1, size2, root2)
+    %__MODULE__{size: size, root: root}
+  end
 
-  # @spec merge(t(), t(), (key(), value(), value() -> value())) :: t()
-  # TODO
+  @spec merge(t(), t(), (key(), value(), value() -> value())) :: t()
+  def merge(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}, fun) do
+    [size | root] = :xb5_trees_node.merge_with(fun, size1, root1, size2, root2)
+    %__MODULE__{size: size, root: root}
+  end
 
   @spec new() :: t()
   def new() do
@@ -342,11 +352,10 @@ defmodule Xb5.Tree do
   end
 
   @doc "Returns the largest element strictly less than `element`, or `:error` if none exists."
-  @spec smaller(t(key, value), value) :: {:ok, value} | :error
+  @spec smaller(t(key, value), value) :: {key, value} | :error
   def smaller(%__MODULE__{root: root}, element) do
-    # FIXME
     case :xb5_trees_node.smaller(element, root) do
-      {:found, e} -> {:ok, e}
+      {_, _} = found -> found
       :none -> :error
     end
   end
