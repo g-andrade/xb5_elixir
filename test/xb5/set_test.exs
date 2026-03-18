@@ -589,28 +589,64 @@ defmodule Xb5SetTest do
 
   describe "additional Set API" do
     test "reject keeps elements for which fun is falsy" do
-      set = Xb5.Set.new([1, 2, 3, 4])
-      set2 = Xb5.Set.reject(set, fn x -> x > 2 end)
-      assert Xb5.Set.to_list(set2) == [1, 2]
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        pred = fn x -> rem(:erlang.phash2(TU.canon_element(x)), 2) == 0 end
+        set2 = Xb5.Set.reject(set, pred)
+        expected = Enum.reject(ref_elements, pred)
+        assert Xb5.Set.size(set2) == length(expected)
+        assert canon_elems(Xb5.Set.to_list(set2)) == canon_elems(expected)
+      end)
     end
 
-    test "symmetric_difference gives elements in exactly one set" do
-      s1 = Xb5.Set.new([1, 2, 3])
-      s2 = Xb5.Set.new([2, 3, 4])
-      result = Xb5.Set.symmetric_difference(s1, s2)
-      assert Xb5.Set.to_list(result) == [1, 4]
+    test "symmetric_difference gives elements in exactly one set, both orderings verified" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        STU.foreach_second_set(
+          fn ref_elements2, set2 ->
+            result_ab = Xb5.Set.symmetric_difference(set, set2)
+            result_ba = Xb5.Set.symmetric_difference(set2, set)
+
+            elems1 = MapSet.new(ref_elements, &TU.canon_element/1)
+            elems2 = MapSet.new(ref_elements2, &TU.canon_element/1)
+            expected = MapSet.symmetric_difference(elems1, elems2)
+
+            assert Xb5.Set.size(result_ab) == MapSet.size(expected)
+            assert Xb5.Set.size(result_ba) == MapSet.size(expected)
+
+            Enum.each(canon_elems(Xb5.Set.to_list(result_ab)), fn e ->
+              assert MapSet.member?(expected, e)
+            end)
+
+            Enum.each(canon_elems(Xb5.Set.to_list(result_ba)), fn e ->
+              assert MapSet.member?(expected, e)
+            end)
+          end,
+          size,
+          ref_elements
+        )
+      end)
     end
 
     test "split_with partitions by predicate" do
-      set = Xb5.Set.new([1, 2, 3, 4])
-      {t1, t2} = Xb5.Set.split_with(set, fn x -> x > 2 end)
-      assert Xb5.Set.to_list(t1) == [3, 4]
-      assert Xb5.Set.to_list(t2) == [1, 2]
+      STU.foreach_test_set(fn _size, ref_elements, set ->
+        pred = fn x -> rem(:erlang.phash2(TU.canon_element(x)), 2) == 0 end
+        {t_true, t_false} = Xb5.Set.split_with(set, pred)
+        expected_true = Enum.filter(ref_elements, pred)
+        expected_false = Enum.reject(ref_elements, pred)
+        assert Xb5.Set.size(t_true) == length(expected_true)
+        assert canon_elems(Xb5.Set.to_list(t_true)) == canon_elems(expected_true)
+        assert Xb5.Set.size(t_false) == length(expected_false)
+        assert canon_elems(Xb5.Set.to_list(t_false)) == canon_elems(expected_false)
+      end)
     end
 
     test "new/2 with transform" do
-      set = Xb5.Set.new([3, 1, 2], fn x -> x * 10 end)
-      assert Xb5.Set.to_list(set) == [10, 20, 30]
+      STU.foreach_test_set(fn _size, ref_elements, _set ->
+        transform = fn x -> {x, :transformed} end
+        set2 = Xb5.Set.new(ref_elements, transform)
+        expected = ref_elements |> Enum.map(transform) |> :lists.usort()
+        assert Xb5.Set.size(set2) == length(expected)
+        assert canon_elems(Xb5.Set.to_list(set2)) == canon_elems(expected)
+      end)
     end
 
     test "new/2 with Erlang term and transform" do
@@ -622,41 +658,55 @@ defmodule Xb5SetTest do
   end
 
   describe "Enumerable protocol" do
-    test "Enum.count returns size" do
-      set = Xb5.Set.new([1, 2, 3])
-      assert Enum.count(set) == 3
-    end
+    test "count, member?, reduce, and slice" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        assert Enum.count(set) == size
 
-    test "Enum.member? checks membership" do
-      set = Xb5.Set.new([1, 2, 3])
-      assert Enum.member?(set, 2)
-      refute Enum.member?(set, 99)
-    end
+        TU.foreach_existing_element(
+          fn elem ->
+            assert Enum.member?(set, elem)
+          end,
+          ref_elements,
+          min(5, size)
+        )
 
-    test "Enum.to_list returns sorted elements" do
-      set = Xb5.Set.new([3, 1, 2])
-      assert Enum.to_list(set) == [1, 2, 3]
-    end
+        TU.foreach_non_existent_element(
+          fn elem ->
+            refute Enum.member?(set, elem)
+          end,
+          ref_elements,
+          3
+        )
 
-    test "Enum.slice returns a range of elements" do
-      set = Xb5.Set.new([1, 2, 3, 4, 5])
-      assert Enum.slice(set, 1, 3) == [2, 3, 4]
+        assert canon_elems(Enum.to_list(set)) == canon_elems(ref_elements)
+
+        if size >= 2 do
+          slice_start = div(size, 4)
+          slice_len = max(1, div(size, 2))
+          sliced = Enum.slice(set, slice_start, slice_len)
+          expected_slice = Enum.slice(ref_elements, slice_start, slice_len)
+          assert canon_elems(sliced) == canon_elems(expected_slice)
+        end
+      end)
     end
   end
 
   describe "Collectable protocol" do
-    test "Enum.into inserts elements into existing set" do
-      base = Xb5.Set.new([1])
-      result = Enum.into([2, 3], base)
-      assert Xb5.Set.to_list(result) == [1, 2, 3]
+    test "Enum.into builds set from elements" do
+      STU.foreach_test_set(fn _size, ref_elements, _set ->
+        result = Enum.into(ref_elements, Xb5.Set.new())
+        assert canon_elems(Xb5.Set.to_list(result)) == canon_elems(ref_elements)
+      end)
     end
 
     test "for comprehension with into builds a set" do
-      result = for n <- [3, 1, 2], into: Xb5.Set.new(), do: n
-      assert Xb5.Set.to_list(result) == [1, 2, 3]
+      STU.foreach_test_set(fn _size, ref_elements, _set ->
+        result = for x <- ref_elements, into: Xb5.Set.new(), do: x
+        assert canon_elems(Xb5.Set.to_list(result)) == canon_elems(ref_elements)
+      end)
     end
 
-    test "halt branch via Stream.take_while" do
+    test "halt branch via Stream.into" do
       result =
         [1, 2, 3, 4, 5]
         |> Stream.into(Xb5.Set.new())
@@ -667,10 +717,13 @@ defmodule Xb5SetTest do
   end
 
   describe "Inspect protocol" do
-    test "inspect produces readable output" do
-      set = Xb5.Set.new([1, 2])
-      inspected = inspect(set)
-      assert String.starts_with?(inspected, "Xb5.Set.new(")
+    test "inspect produces readable output for all set sizes" do
+      STU.foreach_test_set(fn _size, _ref_elements, set ->
+        inspected = inspect(set)
+        assert String.starts_with?(inspected, "Xb5.Set.new(")
+      end)
     end
   end
+
+  defp canon_elems(list), do: Enum.map(list, &TU.canon_element/1)
 end

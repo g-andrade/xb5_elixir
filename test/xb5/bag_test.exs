@@ -1268,30 +1268,42 @@ defmodule Xb5BagTest do
   # ---------------------------------------------------------------------------
 
   describe "fetch_index/get_index" do
-    test "fetch_index returns ok-tuple or error" do
-      bag = Xb5.Bag.new([1, 2, 3])
-      assert Xb5.Bag.fetch_index(bag, 2) == {:ok, 1}
-      assert Xb5.Bag.fetch_index(bag, 99) == :error
-    end
+    test "fetch_index returns ok-tuple or error; fetch_index! raises on missing" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        TU.foreach_existing_element(
+          fn elem ->
+            idx = Enum.find_index(ref_elements, fn e -> e == elem end)
+            assert Xb5.Bag.fetch_index(bag, elem) == {:ok, idx}
+            assert Xb5.Bag.fetch_index!(bag, elem) == idx
+            assert Xb5.Bag.get_index(bag, elem) == idx
+          end,
+          ref_elements,
+          min(5, size)
+        )
 
-    test "fetch_index! returns index or raises KeyError" do
-      bag = Xb5.Bag.new([1, 2, 3])
-      assert Xb5.Bag.fetch_index!(bag, 2) == 1
-      assert_raise KeyError, fn -> Xb5.Bag.fetch_index!(bag, 99) end
-    end
-
-    test "get_index returns index or default" do
-      bag = Xb5.Bag.new([1, 2, 3])
-      assert Xb5.Bag.get_index(bag, 2) == 1
-      assert Xb5.Bag.get_index(bag, 99) == nil
-      assert Xb5.Bag.get_index(bag, 99, :missing) == :missing
+        TU.foreach_non_existent_element(
+          fn elem ->
+            assert Xb5.Bag.fetch_index(bag, elem) == :error
+            assert_raise KeyError, fn -> Xb5.Bag.fetch_index!(bag, elem) end
+            assert Xb5.Bag.get_index(bag, elem) == nil
+            assert Xb5.Bag.get_index(bag, elem, :sentinel) == :sentinel
+          end,
+          ref_elements,
+          3
+        )
+      end)
     end
   end
 
   describe "new/2 with transform" do
     test "transforms elements before building bag" do
-      bag = Xb5.Bag.new([3, 1, 2], fn x -> x * 10 end)
-      assert Xb5.Bag.to_list(bag) == [10, 20, 30]
+      BTU.foreach_test_bag(fn _size, ref_elements, _bag ->
+        transform = fn x -> {x, :transformed} end
+        bag2 = Xb5.Bag.new(ref_elements, transform)
+        expected = Enum.sort(Enum.map(ref_elements, transform))
+        assert Xb5.Bag.size(bag2) == length(ref_elements)
+        assert canon_list(Xb5.Bag.to_list(bag2)) == canon_list(expected)
+      end)
     end
 
     test "new/2 with Erlang bag term and transform" do
@@ -1304,32 +1316,47 @@ defmodule Xb5BagTest do
 
   describe "reject" do
     test "keeps elements for which fun returns falsy" do
-      bag = Xb5.Bag.new([1, 2, 3, 4])
-      bag2 = Xb5.Bag.reject(bag, fn x -> x > 2 end)
-      assert Xb5.Bag.to_list(bag2) == [1, 2]
+      BTU.foreach_test_bag(fn _size, ref_elements, bag ->
+        pred = fn x -> rem(:erlang.phash2(TU.canon_element(x)), 2) == 0 end
+        bag2 = Xb5.Bag.reject(bag, pred)
+        expected = Enum.reject(ref_elements, pred)
+        assert Xb5.Bag.size(bag2) == length(expected)
+        assert canon_list(Xb5.Bag.to_list(bag2)) == canon_list(expected)
+      end)
     end
   end
 
   describe "Enumerable protocol" do
-    test "Enum.count returns size" do
-      bag = Xb5.Bag.new([1, 2, 2, 3])
-      assert Enum.count(bag) == 4
-    end
+    test "count, member?, reduce, and slice" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        assert Enum.count(bag) == size
 
-    test "Enum.member? checks membership" do
-      bag = Xb5.Bag.new([1, 2, 2, 3])
-      assert Enum.member?(bag, 2)
-      refute Enum.member?(bag, 99)
-    end
+        TU.foreach_existing_element(
+          fn elem ->
+            assert Enum.member?(bag, elem)
+          end,
+          ref_elements,
+          min(5, size)
+        )
 
-    test "Enum.to_list returns all elements sorted" do
-      bag = Xb5.Bag.new([3, 1, 2, 1])
-      assert Enum.to_list(bag) == [1, 1, 2, 3]
-    end
+        TU.foreach_non_existent_element(
+          fn elem ->
+            refute Enum.member?(bag, elem)
+          end,
+          ref_elements,
+          3
+        )
 
-    test "Enum.slice returns a range of elements" do
-      bag = Xb5.Bag.new([1, 2, 3, 4, 5])
-      assert Enum.slice(bag, 1, 3) == [2, 3, 4]
+        assert canon_list(Enum.to_list(bag)) == canon_list(ref_elements)
+
+        if size >= 2 do
+          slice_start = div(size, 4)
+          slice_len = max(1, div(size, 2))
+          sliced = Enum.slice(bag, slice_start, slice_len)
+          expected_slice = Enum.slice(ref_elements, slice_start, slice_len)
+          assert canon_list(sliced) == canon_list(expected_slice)
+        end
+      end)
     end
 
     test "Enum.slice with step exercises step branches" do
@@ -1340,19 +1367,21 @@ defmodule Xb5BagTest do
   end
 
   describe "Collectable protocol" do
-    test "Enum.into inserts elements into existing bag" do
-      base = Xb5.Bag.new([1])
-      result = Enum.into([2, 3], base)
-      assert Xb5.Bag.to_list(result) == [1, 2, 3]
+    test "Enum.into builds bag from elements" do
+      BTU.foreach_test_bag(fn _size, ref_elements, _bag ->
+        result = Enum.into(ref_elements, Xb5.Bag.new())
+        assert canon_list(Xb5.Bag.to_list(result)) == canon_list(ref_elements)
+      end)
     end
 
     test "for comprehension with into builds a bag" do
-      result = for n <- [3, 1, 2], into: Xb5.Bag.new(), do: n
-      assert Xb5.Bag.to_list(result) == [1, 2, 3]
+      BTU.foreach_test_bag(fn _size, ref_elements, _bag ->
+        result = for x <- ref_elements, into: Xb5.Bag.new(), do: x
+        assert canon_list(Xb5.Bag.to_list(result)) == canon_list(ref_elements)
+      end)
     end
 
-    test "halt branch via Stream.take_while" do
-      # Stream.into + halt exercises the :halt branch
+    test "halt branch via Stream.into" do
       result =
         [1, 2, 3, 4, 5]
         |> Stream.into(Xb5.Bag.new())
@@ -1363,10 +1392,11 @@ defmodule Xb5BagTest do
   end
 
   describe "Inspect protocol" do
-    test "inspect produces readable output" do
-      bag = Xb5.Bag.new([1, 2])
-      inspected = inspect(bag)
-      assert String.starts_with?(inspected, "Xb5.Bag.new(")
+    test "inspect produces readable output for all bag sizes" do
+      BTU.foreach_test_bag(fn _size, _ref_elements, bag ->
+        inspected = inspect(bag)
+        assert String.starts_with?(inspected, "Xb5.Bag.new(")
+      end)
     end
   end
 end

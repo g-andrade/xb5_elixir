@@ -471,144 +471,396 @@ defmodule Xb5TreeTest do
 
   describe "get/get_lazy/get_and_update/get_and_update!" do
     test "get returns value or default" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      assert Xb5.Tree.get(tree, :a) == 1
-      assert Xb5.Tree.get(tree, :c) == nil
-      assert Xb5.Tree.get(tree, :c, :default) == :default
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, value ->
+            assert Xb5.Tree.get(tree, key) == value
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            assert Xb5.Tree.get(tree, key) == nil
+            assert Xb5.Tree.get(tree, key, :sentinel) == :sentinel
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
 
-    test "get_lazy returns value or calls fun" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      assert Xb5.Tree.get_lazy(tree, :a, fn -> :default end) == 1
-      assert Xb5.Tree.get_lazy(tree, :b, fn -> :default end) == :default
+    test "get_lazy returns value without calling fun; calls fun when absent" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, value ->
+            assert Xb5.Tree.get_lazy(tree, key, fn -> raise "should not be called" end) == value
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            sentinel = make_ref()
+            assert Xb5.Tree.get_lazy(tree, key, fn -> sentinel end) == sentinel
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
 
-    test "get_and_update updates or inserts, supports :pop" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      # update existing
-      {old, tree2} = Xb5.Tree.get_and_update(tree, :a, fn v -> {v, v + 10} end)
-      assert old == 1
-      assert Xb5.Tree.fetch!(tree2, :a) == 11
-      # pop existing (`:pop` sentinel removes the key)
-      {old2, tree3} = Xb5.Tree.get_and_update(tree, :a, fn v -> {v, :pop} end)
-      assert old2 == 1
-      # value is set to :pop, not deleted (Map.get_and_update semantics: :pop in tuple sets the value)
-      assert Xb5.Tree.fetch!(tree3, :a) == :pop
-      # actual pop (return bare :pop atom)
-      {old3, tree4} = Xb5.Tree.get_and_update(tree, :a, fn _ -> :pop end)
-      assert old3 == 1
-      refute Xb5.Tree.has_key?(tree4, :a)
-      # insert absent (nil)
-      {_old4, tree5} = Xb5.Tree.get_and_update(tree, :c, fn nil -> {nil, 99} end)
-      assert Xb5.Tree.fetch!(tree5, :c) == 99
-      # pop absent (no-op)
-      {nil_v, tree6} = Xb5.Tree.get_and_update(tree, :d, fn _ -> :pop end)
-      assert nil_v == nil
-      assert tree6 == tree
+    test "get_and_update updates or pops existing; inserts or no-ops when absent" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, value ->
+            new_value = make_ref()
+            {old, tree2} = Xb5.Tree.get_and_update(tree, key, fn v -> {v, new_value} end)
+            assert old == value
+            assert Xb5.Tree.fetch!(tree2, key) == new_value
+            assert Xb5.Tree.size(tree2) == size
+
+            {old2, tree3} = Xb5.Tree.get_and_update(tree, key, fn _ -> :pop end)
+            assert old2 == value
+            refute Xb5.Tree.has_key?(tree3, key)
+            assert Xb5.Tree.size(tree3) == size - 1
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            sentinel = make_ref()
+            {old, tree2} = Xb5.Tree.get_and_update(tree, key, fn nil -> {nil, sentinel} end)
+            assert old == nil
+            assert Xb5.Tree.fetch!(tree2, key) == sentinel
+            assert Xb5.Tree.size(tree2) == size + 1
+
+            {nil_v, tree3} = Xb5.Tree.get_and_update(tree, key, fn _ -> :pop end)
+            assert nil_v == nil
+            assert tree3 == tree
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
 
-    test "get_and_update! updates or pops, raises on missing key" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      {old, tree2} = Xb5.Tree.get_and_update!(tree, :a, fn v -> {v, v + 10} end)
-      assert old == 1
-      assert Xb5.Tree.fetch!(tree2, :a) == 11
-      {old2, tree3} = Xb5.Tree.get_and_update!(tree, :a, fn _ -> :pop end)
-      assert old2 == 1
-      refute Xb5.Tree.has_key?(tree3, :a)
-      assert_raise KeyError, fn -> Xb5.Tree.get_and_update!(tree, :missing, fn _ -> {:x, :y} end) end
+    test "get_and_update! updates or pops existing; raises on missing key" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, value ->
+            new_value = make_ref()
+            {old, tree2} = Xb5.Tree.get_and_update!(tree, key, fn v -> {v, new_value} end)
+            assert old == value
+            assert Xb5.Tree.fetch!(tree2, key) == new_value
+            assert Xb5.Tree.size(tree2) == size
+
+            {old2, tree3} = Xb5.Tree.get_and_update!(tree, key, fn _ -> :pop end)
+            assert old2 == value
+            refute Xb5.Tree.has_key?(tree3, key)
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            assert_raise KeyError, fn ->
+              Xb5.Tree.get_and_update!(tree, key, fn _ -> {:x, :y} end)
+            end
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
   end
 
   describe "drop/equal?" do
     test "drop removes multiple keys" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}])
-      tree2 = Xb5.Tree.drop(tree, [:a, :c])
-      assert Xb5.Tree.to_list(tree2) == [{:b, 2}]
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        drop_count = min(max(1, div(size, 5)), length(ref_kvs))
+
+        keys_to_drop =
+          ref_kvs |> TU.list_shuffle() |> Enum.take(drop_count) |> Enum.map(fn {k, _} -> k end)
+
+        tree2 = Xb5.Tree.drop(tree, keys_to_drop)
+        dropped_set = MapSet.new(keys_to_drop, &TTU.canon_key/1)
+
+        expected =
+          Enum.reject(ref_kvs, fn {k, _} -> MapSet.member?(dropped_set, TTU.canon_key(k)) end)
+
+        assert Xb5.Tree.size(tree2) == length(expected)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) == TTU.canon_kvs(expected)
+      end)
     end
 
-    test "equal? compares two trees" do
-      t1 = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      t2 = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      t3 = Xb5.Tree.new([{:a, 1}])
-      assert Xb5.Tree.equal?(t1, t2)
-      refute Xb5.Tree.equal?(t1, t3)
+    test "equal? returns true for identical content, false otherwise" do
+      TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
+        tree2 = Xb5.Tree.new(ref_kvs)
+        assert Xb5.Tree.equal?(tree, tree2)
+
+        empty = Xb5.Tree.new()
+
+        if ref_kvs == [] do
+          assert Xb5.Tree.equal?(tree, empty)
+        else
+          refute Xb5.Tree.equal?(tree, empty)
+        end
+      end)
     end
   end
 
   describe "filter/reject/from_keys/take" do
     test "filter keeps matching pairs" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}])
-      tree2 = Xb5.Tree.filter(tree, fn {_k, v} -> v > 1 end)
-      assert Xb5.Tree.to_list(tree2) == [{:b, 2}, {:c, 3}]
+      TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
+        pred = fn {k, _v} -> rem(:erlang.phash2(TTU.canon_key(k)), 2) == 0 end
+        tree2 = Xb5.Tree.filter(tree, pred)
+        expected = Enum.filter(ref_kvs, pred)
+        assert Xb5.Tree.size(tree2) == length(expected)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) == TTU.canon_kvs(expected)
+      end)
     end
 
     test "reject removes matching pairs" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}])
-      tree2 = Xb5.Tree.reject(tree, fn {_k, v} -> v > 1 end)
-      assert Xb5.Tree.to_list(tree2) == [{:a, 1}]
+      TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
+        pred = fn {k, _v} -> rem(:erlang.phash2(TTU.canon_key(k)), 2) == 0 end
+        tree2 = Xb5.Tree.reject(tree, pred)
+        expected = Enum.reject(ref_kvs, pred)
+        assert Xb5.Tree.size(tree2) == length(expected)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) == TTU.canon_kvs(expected)
+      end)
     end
 
-    test "from_keys builds tree with shared value" do
-      tree = Xb5.Tree.from_keys([:a, :b, :c], 0)
-      assert Xb5.Tree.to_list(tree) == [{:a, 0}, {:b, 0}, {:c, 0}]
+    test "from_keys builds tree mapping each key to the given value" do
+      TTU.foreach_test_tree(fn _size, ref_kvs, _tree ->
+        keys = Enum.map(ref_kvs, fn {k, _} -> k end)
+        sentinel = make_ref()
+        tree2 = Xb5.Tree.from_keys(keys, sentinel)
+        assert Xb5.Tree.size(tree2) == length(keys)
+        assert Enum.all?(Xb5.Tree.to_list(tree2), fn {_k, v} -> v === sentinel end)
+
+        assert TTU.canon_kvs(Enum.map(Xb5.Tree.to_list(tree2), fn {k, _} -> {k, :x} end)) ==
+                 TTU.canon_kvs(Enum.map(ref_kvs, fn {k, _} -> {k, :x} end))
+      end)
     end
 
     test "take keeps only the given keys" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}])
-      tree2 = Xb5.Tree.take(tree, [:a, :c])
-      assert Xb5.Tree.to_list(tree2) == [{:a, 1}, {:c, 3}]
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        take_count = min(max(1, div(size, 3)), length(ref_kvs))
+
+        keys_to_take =
+          ref_kvs |> TU.list_shuffle() |> Enum.take(take_count) |> Enum.map(fn {k, _} -> k end)
+
+        tree2 = Xb5.Tree.take(tree, keys_to_take)
+        taken_set = MapSet.new(keys_to_take, &TTU.canon_key/1)
+
+        expected =
+          Enum.filter(ref_kvs, fn {k, _} -> MapSet.member?(taken_set, TTU.canon_key(k)) end)
+
+        assert Xb5.Tree.size(tree2) == length(expected)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) == TTU.canon_kvs(expected)
+      end)
     end
   end
 
   describe "replace/replace!/replace_lazy" do
     test "replace updates existing key, no-op on missing" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      tree2 = Xb5.Tree.replace(tree, :a, 99)
-      assert Xb5.Tree.fetch!(tree2, :a) == 99
-      tree3 = Xb5.Tree.replace(tree, :missing, 99)
-      assert tree3 == tree
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, _value ->
+            new_value = make_ref()
+            tree2 = Xb5.Tree.replace(tree, key, new_value)
+            assert Xb5.Tree.size(tree2) == size
+
+            assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) ==
+                     TTU.canon_kvs(TTU.update_in_sorted_list(key, new_value, ref_kvs))
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            assert Xb5.Tree.replace(tree, key, :new_value) == tree
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
 
     test "replace! updates existing, raises on missing" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      tree2 = Xb5.Tree.replace!(tree, :a, 99)
-      assert Xb5.Tree.fetch!(tree2, :a) == 99
-      assert_raise KeyError, fn -> Xb5.Tree.replace!(tree, :missing, 99) end
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, _value ->
+            new_value = make_ref()
+            tree2 = Xb5.Tree.replace!(tree, key, new_value)
+            assert Xb5.Tree.size(tree2) == size
+
+            assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) ==
+                     TTU.canon_kvs(TTU.update_in_sorted_list(key, new_value, ref_kvs))
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            assert_raise KeyError, fn -> Xb5.Tree.replace!(tree, key, :new_value) end
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
 
     test "replace_lazy updates existing via fun, no-op on missing" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      tree2 = Xb5.Tree.replace_lazy(tree, :a, fn v -> v + 10 end)
-      assert Xb5.Tree.fetch!(tree2, :a) == 11
-      tree3 = Xb5.Tree.replace_lazy(tree, :missing, fn _ -> 99 end)
-      assert tree3 == tree
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, value ->
+            new_value = make_ref()
+
+            tree2 =
+              Xb5.Tree.replace_lazy(tree, key, fn prev ->
+                assert prev == value
+                new_value
+              end)
+
+            assert Xb5.Tree.size(tree2) == size
+
+            assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) ==
+                     TTU.canon_kvs(TTU.update_in_sorted_list(key, new_value, ref_kvs))
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            assert Xb5.Tree.replace_lazy(tree, key, fn _ -> raise "should not be called" end) ==
+                     tree
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
   end
 
   describe "merge (2-arg and 3-arg)" do
-    test "merge/2 merges trees, right-hand wins on conflict" do
-      t1 = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      t2 = Xb5.Tree.new([{:b, 20}, {:c, 3}])
-      merged = Xb5.Tree.merge(t1, t2)
-      assert Xb5.Tree.to_list(merged) == [{:a, 1}, {:b, 20}, {:c, 3}]
-    end
-
-    test "merge/3 uses fun for conflicts" do
-      t1 = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      t2 = Xb5.Tree.new([{:b, 20}, {:c, 3}])
-      merged = Xb5.Tree.merge(t1, t2, fn _k, v1, v2 -> v1 + v2 end)
-      assert Xb5.Tree.to_list(merged) == [{:a, 1}, {:b, 22}, {:c, 3}]
-    end
-
-    test "merge with second tree (randomized)" do
+    test "merge/2 right-hand wins, both argument orderings verified" do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
         TTU.foreach_second_tree(
           fn ref_kvs2, tree2 ->
-            # right-hand wins: merge tree1, tree2 — tree2 values win
-            merged = Xb5.Tree.merge(tree, tree2)
-            expected = merge_lists(fn _k, _v1, v2 -> v2 end, ref_kvs, ref_kvs2)
-            assert Xb5.Tree.size(merged) == length(expected)
-            assert TTU.canon_kvs(Xb5.Tree.to_list(merged)) == TTU.canon_kvs(expected)
+            merged_ab = Xb5.Tree.merge(tree, tree2)
+            expected_ab = merge_lists(fn _k, _v1, v2 -> v2 end, ref_kvs, ref_kvs2)
+            assert Xb5.Tree.size(merged_ab) == length(expected_ab)
+            assert TTU.canon_kvs(Xb5.Tree.to_list(merged_ab)) == TTU.canon_kvs(expected_ab)
+
+            merged_ba = Xb5.Tree.merge(tree2, tree)
+            expected_ba = merge_lists(fn _k, _v1, v2 -> v2 end, ref_kvs2, ref_kvs)
+            assert Xb5.Tree.size(merged_ba) == length(expected_ba)
+            assert TTU.canon_kvs(Xb5.Tree.to_list(merged_ba)) == TTU.canon_kvs(expected_ba)
+          end,
+          size,
+          ref_kvs
+        )
+      end)
+    end
+
+    test "merge/3 fun resolves conflicts, both argument orderings verified" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        TTU.foreach_second_tree(
+          fn ref_kvs2, tree2 ->
+            merge_fun = fn _k, v1, v2 -> {v1, v2} end
+
+            merged_ab = Xb5.Tree.merge(tree, tree2, merge_fun)
+            expected_ab = merge_lists(merge_fun, ref_kvs, ref_kvs2)
+            assert Xb5.Tree.size(merged_ab) == length(expected_ab)
+            assert TTU.canon_kvs(Xb5.Tree.to_list(merged_ab)) == TTU.canon_kvs(expected_ab)
+
+            merged_ba = Xb5.Tree.merge(tree2, tree, merge_fun)
+            expected_ba = merge_lists(merge_fun, ref_kvs2, ref_kvs)
+            assert Xb5.Tree.size(merged_ba) == length(expected_ba)
+            assert TTU.canon_kvs(Xb5.Tree.to_list(merged_ba)) == TTU.canon_kvs(expected_ba)
+          end,
+          size,
+          ref_kvs
+        )
+      end)
+    end
+
+    test "merge/2 with sequential boundary trees (variants2)" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        TTU.foreach_second_tree(
+          fn ref_kvs2, tree2 ->
+            merged_ab = Xb5.Tree.merge(tree, tree2)
+            expected_ab = merge_lists(fn _k, _v1, v2 -> v2 end, ref_kvs, ref_kvs2)
+            assert Xb5.Tree.size(merged_ab) == length(expected_ab)
+            assert TTU.canon_kvs(Xb5.Tree.to_list(merged_ab)) == TTU.canon_kvs(expected_ab)
+          end,
+          size,
+          ref_kvs,
+          test_variants2: true
+        )
+      end)
+    end
+  end
+
+  describe "intersect" do
+    test "intersect/2 keeps common keys with right-hand values, both orderings verified" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        TTU.foreach_second_tree(
+          fn ref_kvs2, tree2 ->
+            canon1_map = Map.new(TTU.canon_kvs(ref_kvs))
+            canon2_map = Map.new(TTU.canon_kvs(ref_kvs2))
+            common_keys = for {k, _} <- canon1_map, Map.has_key?(canon2_map, k), do: k
+
+            result_ab = Xb5.Tree.intersect(tree, tree2)
+            result_ab_map = Map.new(TTU.canon_kvs(Xb5.Tree.to_list(result_ab)))
+            assert Xb5.Tree.size(result_ab) == length(common_keys)
+            Enum.each(common_keys, fn k -> assert result_ab_map[k] == canon2_map[k] end)
+
+            result_ba = Xb5.Tree.intersect(tree2, tree)
+            result_ba_map = Map.new(TTU.canon_kvs(Xb5.Tree.to_list(result_ba)))
+            assert Xb5.Tree.size(result_ba) == length(common_keys)
+            Enum.each(common_keys, fn k -> assert result_ba_map[k] == canon1_map[k] end)
+          end,
+          size,
+          ref_kvs
+        )
+      end)
+    end
+
+    test "intersect/3 fun merges conflicting values, both orderings verified" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        TTU.foreach_second_tree(
+          fn ref_kvs2, tree2 ->
+            canon1_map = Map.new(TTU.canon_kvs(ref_kvs))
+            canon2_map = Map.new(TTU.canon_kvs(ref_kvs2))
+            common_keys = for {k, _} <- canon1_map, Map.has_key?(canon2_map, k), do: k
+            intersect_fun = fn _k, v1, v2 -> {v1, v2} end
+
+            result_ab = Xb5.Tree.intersect(tree, tree2, intersect_fun)
+            result_ab_map = Map.new(TTU.canon_kvs(Xb5.Tree.to_list(result_ab)))
+            assert Xb5.Tree.size(result_ab) == length(common_keys)
+
+            Enum.each(common_keys, fn k ->
+              assert result_ab_map[k] == intersect_fun.(k, canon1_map[k], canon2_map[k])
+            end)
+
+            result_ba = Xb5.Tree.intersect(tree2, tree, intersect_fun)
+            result_ba_map = Map.new(TTU.canon_kvs(Xb5.Tree.to_list(result_ba)))
+            assert Xb5.Tree.size(result_ba) == length(common_keys)
+
+            Enum.each(common_keys, fn k ->
+              assert result_ba_map[k] == intersect_fun.(k, canon2_map[k], canon1_map[k])
+            end)
           end,
           size,
           ref_kvs
@@ -617,76 +869,135 @@ defmodule Xb5TreeTest do
     end
   end
 
-  describe "intersect" do
-    test "intersect/2 keeps common keys with right-hand values" do
-      t1 = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      t2 = Xb5.Tree.new([{:b, 20}, {:c, 3}])
-      result = Xb5.Tree.intersect(t1, t2)
-      assert Xb5.Tree.to_list(result) == [{:b, 20}]
-    end
-
-    test "intersect/3 uses fun to merge conflicting values" do
-      t1 = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      t2 = Xb5.Tree.new([{:b, 20}, {:c, 3}])
-      result = Xb5.Tree.intersect(t1, t2, fn _k, v1, v2 -> v1 + v2 end)
-      assert Xb5.Tree.to_list(result) == [{:b, 22}]
-    end
-  end
-
   describe "split/split_with" do
     test "split partitions by key list" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}, {:d, 4}])
-      {t1, t2} = Xb5.Tree.split(tree, [:b, :d])
-      assert Xb5.Tree.to_list(t1) == [{:b, 2}, {:d, 4}]
-      assert Xb5.Tree.to_list(t2) == [{:a, 1}, {:c, 3}]
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        split_count = min(max(1, div(size, 3)), length(ref_kvs))
+
+        keys_to_split =
+          ref_kvs |> TU.list_shuffle() |> Enum.take(split_count) |> Enum.map(fn {k, _} -> k end)
+
+        {t_in, t_out} = Xb5.Tree.split(tree, keys_to_split)
+        split_set = MapSet.new(keys_to_split, &TTU.canon_key/1)
+
+        expected_in =
+          Enum.filter(ref_kvs, fn {k, _} -> MapSet.member?(split_set, TTU.canon_key(k)) end)
+
+        expected_out =
+          Enum.reject(ref_kvs, fn {k, _} -> MapSet.member?(split_set, TTU.canon_key(k)) end)
+
+        assert Xb5.Tree.size(t_in) == length(expected_in)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(t_in)) == TTU.canon_kvs(expected_in)
+        assert Xb5.Tree.size(t_out) == length(expected_out)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(t_out)) == TTU.canon_kvs(expected_out)
+      end)
     end
 
     test "split_with partitions by predicate" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}])
-      {t1, t2} = Xb5.Tree.split_with(tree, fn {_k, v} -> v > 1 end)
-      assert Xb5.Tree.to_list(t1) == [{:b, 2}, {:c, 3}]
-      assert Xb5.Tree.to_list(t2) == [{:a, 1}]
+      TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
+        pred = fn {k, _v} -> rem(:erlang.phash2(TTU.canon_key(k)), 2) == 0 end
+        {t_true, t_false} = Xb5.Tree.split_with(tree, pred)
+        expected_true = Enum.filter(ref_kvs, pred)
+        expected_false = Enum.reject(ref_kvs, pred)
+
+        assert Xb5.Tree.size(t_true) == length(expected_true)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(t_true)) == TTU.canon_kvs(expected_true)
+        assert Xb5.Tree.size(t_false) == length(expected_false)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(t_false)) == TTU.canon_kvs(expected_false)
+      end)
     end
   end
 
   describe "put_new_lazy" do
-    test "inserts via fun when key absent; no-op when present" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      tree2 = Xb5.Tree.put_new_lazy(tree, :b, fn -> 99 end)
-      assert Xb5.Tree.fetch!(tree2, :b) == 99
-      tree3 = Xb5.Tree.put_new_lazy(tree, :a, fn -> raise "should not be called" end)
-      assert tree3 == tree
+    test "inserts via fun when key absent; fun not called when key present" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_non_existent_key(
+          fn key ->
+            sentinel = make_ref()
+            tree2 = Xb5.Tree.put_new_lazy(tree, key, fn -> sentinel end)
+            assert Xb5.Tree.fetch!(tree2, key) == sentinel
+            assert Xb5.Tree.size(tree2) == size + 1
+          end,
+          ref_kvs,
+          3
+        )
+
+        foreach_existing_pair(
+          fn key, _value ->
+            tree2 = Xb5.Tree.put_new_lazy(tree, key, fn -> raise "should not be called" end)
+            assert tree2 == tree
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+      end)
     end
   end
 
   describe "pop/pop_lazy" do
-    test "pop returns value + updated tree; default when absent" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      {val, tree2} = Xb5.Tree.pop(tree, :a)
-      assert val == 1
-      refute Xb5.Tree.has_key?(tree2, :a)
-      {val2, tree3} = Xb5.Tree.pop(tree, :missing)
-      assert val2 == nil
-      assert tree3 == tree
-      {val3, _} = Xb5.Tree.pop(tree, :missing, :def)
-      assert val3 == :def
+    test "pop returns {value, tree_without_key}; default when absent" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, value ->
+            {val, tree2} = Xb5.Tree.pop(tree, key)
+            assert val == value
+            refute Xb5.Tree.has_key?(tree2, key)
+            assert Xb5.Tree.size(tree2) == size - 1
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            {val, tree2} = Xb5.Tree.pop(tree, key)
+            assert val == nil
+            assert tree2 == tree
+            {val3, _} = Xb5.Tree.pop(tree, key, :sentinel)
+            assert val3 == :sentinel
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
 
-    test "pop_lazy returns value + tree; calls fun when absent" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      {val, tree2} = Xb5.Tree.pop_lazy(tree, :a, fn -> :default end)
-      assert val == 1
-      refute Xb5.Tree.has_key?(tree2, :a)
-      {val2, tree3} = Xb5.Tree.pop_lazy(tree, :missing, fn -> :default end)
-      assert val2 == :default
-      assert tree3 == tree
+    test "pop_lazy returns value when present; calls fun when absent" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        foreach_existing_pair(
+          fn key, value ->
+            {val, tree2} = Xb5.Tree.pop_lazy(tree, key, fn -> raise "should not be called" end)
+            assert val == value
+            refute Xb5.Tree.has_key?(tree2, key)
+            assert Xb5.Tree.size(tree2) == size - 1
+          end,
+          ref_kvs,
+          min(5, size)
+        )
+
+        foreach_non_existent_key(
+          fn key ->
+            sentinel = make_ref()
+            {val, tree2} = Xb5.Tree.pop_lazy(tree, key, fn -> sentinel end)
+            assert val == sentinel
+            assert tree2 == tree
+          end,
+          ref_kvs,
+          3
+        )
+      end)
     end
   end
 
   describe "new/2 with transform" do
     test "transforms pairs before building tree" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}], fn {k, v} -> {k, v * 10} end)
-      assert Xb5.Tree.to_list(tree) == [{:a, 10}, {:b, 20}]
+      TTU.foreach_test_tree(fn _size, ref_kvs, _tree ->
+        transform = fn {k, v} -> {k, {v, :transformed}} end
+        tree2 = Xb5.Tree.new(ref_kvs, transform)
+        expected = Enum.map(ref_kvs, transform)
+        assert Xb5.Tree.size(tree2) == length(expected)
+        assert TTU.canon_kvs(Xb5.Tree.to_list(tree2)) == TTU.canon_kvs(expected)
+      end)
     end
 
     test "new/2 with Erlang term and transform" do
@@ -701,62 +1012,58 @@ defmodule Xb5TreeTest do
   # Protocol coverage
   # ---------------------------------------------------------------------------
 
-  describe "merge via foreach_second_tree with variants2" do
-    test "merge/2 with sequential boundary trees" do
+  describe "Enumerable protocol" do
+    test "count, member?, reduce, and slice" do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
-        TTU.foreach_second_tree(
-          fn ref_kvs2, tree2 ->
-            merged = Xb5.Tree.merge(tree, tree2)
-            expected = merge_lists(fn _k, _v1, v2 -> v2 end, ref_kvs, ref_kvs2)
-            assert Xb5.Tree.size(merged) == length(expected)
+        assert Enum.count(tree) == size
+
+        # member? uses === internally; test with exact stored pairs (no key-type switching)
+        ref_kvs
+        |> TU.list_shuffle()
+        |> Enum.take(min(5, size))
+        |> Enum.each(fn {k, _} = pair ->
+          assert Enum.member?(tree, pair)
+          refute Enum.member?(tree, {k, make_ref()})
+        end)
+
+        foreach_non_existent_key(
+          fn key ->
+            refute Enum.member?(tree, {key, :anything})
           end,
-          size,
           ref_kvs,
-          test_variants2: true
+          3
         )
+
+        refute Enum.member?(tree, :not_a_pair)
+        assert TTU.canon_kvs(Enum.to_list(tree)) == TTU.canon_kvs(ref_kvs)
+
+        if size >= 2 do
+          slice_start = div(size, 4)
+          slice_len = max(1, div(size, 2))
+          sliced = Enum.slice(tree, slice_start, slice_len)
+          expected_slice = Enum.slice(ref_kvs, slice_start, slice_len)
+          assert TTU.canon_kvs(sliced) == TTU.canon_kvs(expected_slice)
+        end
       end)
     end
   end
 
-  describe "Enumerable protocol" do
-    test "Enum.count returns size" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}])
-      assert Enum.count(tree) == 3
-    end
-
-    test "Enum.member? checks key-value pair membership" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      assert Enum.member?(tree, {:a, 1})
-      refute Enum.member?(tree, {:a, 99})
-      refute Enum.member?(tree, {:missing, 1})
-      # non-tuple value should be false
-      refute Enum.member?(tree, :not_a_pair)
-    end
-
-    test "Enum.to_list returns key-value pairs" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}])
-      assert Enum.to_list(tree) == [{:a, 1}, {:b, 2}]
-    end
-
-    test "Enum.slice works correctly" do
-      tree = Xb5.Tree.new([{:a, 1}, {:b, 2}, {:c, 3}, {:d, 4}])
-      assert Enum.slice(tree, 1, 2) == [{:b, 2}, {:c, 3}]
-    end
-  end
-
   describe "Collectable protocol" do
-    test "Enum.into inserts pairs into an existing tree" do
-      base = Xb5.Tree.new([{:a, 1}])
-      result = Enum.into([{:b, 2}, {:c, 3}], base)
-      assert Xb5.Tree.to_list(result) == [{:a, 1}, {:b, 2}, {:c, 3}]
+    test "Enum.into builds tree from pairs" do
+      TTU.foreach_test_tree(fn _size, ref_kvs, _tree ->
+        result = Enum.into(ref_kvs, Xb5.Tree.new())
+        assert TTU.canon_kvs(Xb5.Tree.to_list(result)) == TTU.canon_kvs(ref_kvs)
+      end)
     end
 
     test "for comprehension with into builds a tree" do
-      result = for n <- 1..3, into: Xb5.Tree.new(), do: {n, n * n}
-      assert Xb5.Tree.to_list(result) == [{1, 1}, {2, 4}, {3, 9}]
+      TTU.foreach_test_tree(fn _size, ref_kvs, _tree ->
+        result = for {k, v} <- ref_kvs, into: Xb5.Tree.new(), do: {k, v}
+        assert TTU.canon_kvs(Xb5.Tree.to_list(result)) == TTU.canon_kvs(ref_kvs)
+      end)
     end
 
-    test "halt branch via Stream.take_while" do
+    test "halt branch via Stream.into" do
       result =
         [{1, :a}, {2, :b}, {3, :c}, {4, :d}]
         |> Stream.into(Xb5.Tree.new())
@@ -767,10 +1074,11 @@ defmodule Xb5TreeTest do
   end
 
   describe "Inspect protocol" do
-    test "inspect produces readable output" do
-      tree = Xb5.Tree.new([{:a, 1}])
-      inspected = inspect(tree)
-      assert String.starts_with?(inspected, "Xb5.Tree.new(")
+    test "inspect produces readable output for all tree sizes" do
+      TTU.foreach_test_tree(fn _size, _ref_kvs, tree ->
+        inspected = inspect(tree)
+        assert String.starts_with?(inspected, "Xb5.Tree.new(")
+      end)
     end
   end
 
@@ -832,11 +1140,9 @@ defmodule Xb5TreeTest do
     end
   end
 
-  # Keeps last repeated key, using == equality (mirrors Erlang's gb_trees:enter behavior).
+  # Keeps last occurrence of duplicate keys (mirrors from_list/1 internals, no circular dep).
   defp sort_kv_list_keep_last_repeated(list) do
-    # Build a tree by calling put/3 on each pair (last one wins for == keys).
-    tree = Enum.reduce(list, Xb5.Tree.new(), fn {k, v}, acc -> Xb5.Tree.put(acc, k, v) end)
-    Xb5.Tree.to_list(tree)
+    :lists.ukeysort(1, :lists.reverse(list))
   end
 
   # ---------------------------------------------------------------------------
@@ -1021,6 +1327,7 @@ defmodule Xb5TreeTest do
 
   defp merge_lists(_fun, [], l2), do: l2
   defp merge_lists(_fun, l1, []), do: l1
+
 
   # ---------------------------------------------------------------------------
   # map helper

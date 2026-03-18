@@ -558,7 +558,7 @@ defmodule Xb5.Tree do
         split_recur(next, next_cmp_keys, size1, acc1, size2, acc2)
 
       [] ->
-        size2 = size2 + length(acc2)
+        size2 = size2 + length(list)
         acc2 = :lists.reverse(list, acc2)
         split_finish(size1, acc1, size2, acc2)
     end
