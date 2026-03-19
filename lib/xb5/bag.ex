@@ -162,7 +162,7 @@ defmodule Xb5.Bag do
   end
 
   @doc "Returns the percentile value for the given `percentile` (0.0–1.0) using the given method options. Returns `{:value, x}` or `:none`."
-  @spec percentile(t(value), percentile, opts) :: {:ok, value | interpolation_result} | :error
+  @spec percentile(t(value), percentile, opts) :: {:value, value | interpolation_result} | :none
         when percentile: :xb5_bag_utils.percentile(),
              opts: [:xb5_bag_utils.percentile_bracket_opt()],
              interpolation_result: number
@@ -170,7 +170,9 @@ defmodule Xb5.Bag do
   def percentile(bag, percentile, opts \\ [])
 
   def percentile(%__MODULE__{size: size, root: root}, percentile, opts) do
-    :xb5_bag_utils.percentile(percentile, size, root, opts)
+    # FIXME review returned value
+    value_fun = fn value -> {:value, value} end
+    :xb5_bag_utils.percentile(percentile, size, root, value_fun, opts)
   end
 
   @doc "Returns the percentile bracket for the given `percentile`. Returns `{:exact, x}`, `{:between, low, high}`, or `:none`."
@@ -294,45 +296,12 @@ defmodule Xb5.Bag do
       {:ok, Xb5.Bag.member?(bag, val)}
     end
 
-    def slice(bag) do
-      size = Xb5.Bag.size(bag)
-      {:ok, size, &slicing_fun(bag, &1, &2, &3)}
+    def slice(%Xb5.Bag{size: bag_size, root: root}) do
+      {:ok, bag_size, &:xb5_bag_node.elixir_slice(&1, &2, &3, bag_size, root)}
     end
 
-    def reduce(set, acc, fun) do
-      set
-      |> Xb5.Bag.to_list()
-      |> Enumerable.List.reduce(acc, fun)
-    end
-
-    ## Internal
-
-    defp slicing_fun(bag, start, length, step) do
-      %{size: bag_size, root: bag_root} = Xb5.Bag.unwrap(bag)
-      iterator = :xb5_bag_node.iterator_from_nth(start + 1, bag_size, bag_root, :ordered)
-      slice_recur(iterator, length, step, 1)
-    end
-
-    defp slice_recur(iterator, length, step, substep) when length > 0 do
-      {value, iterator} = :xb5_bag_node.next(iterator)
-
-      cond do
-        substep === 1 and substep < step ->
-          [value | slice_recur(iterator, length, step, substep + 1)]
-
-        substep === 1 ->
-          [value | slice_recur(iterator, length - 1, step, 1)]
-
-        substep < step ->
-          slice_recur(iterator, length, step, substep + 1)
-
-        substep === step ->
-          slice_recur(iterator, length - 1, step, 1)
-      end
-    end
-
-    defp slice_recur(_iterator, 0, _step, _substep) do
-      []
+    def reduce(%Xb5.Bag{root: root}, acc, fun) do
+      :xb5_bag_node.elixir_reduce(fun, acc, root)
     end
   end
 

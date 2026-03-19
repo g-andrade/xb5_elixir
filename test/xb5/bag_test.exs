@@ -894,25 +894,24 @@ defmodule Xb5BagTest do
           assert canon_equal?({:value, exact_elem}, Xb5.Bag.percentile(bag, percentile))
         else
           case Enum.slice(ref_elements, (low_rank - 1)..(high_rank - 1)) do
-            [low_elem, high_elem | _] ->
-              if low_elem == high_elem do
+            [a, b | _] ->
+              if a == b do
                 assert canon_equal?(
-                         {:exact, low_elem},
+                         {:exact, a},
                          Xb5.Bag.percentile_bracket(bag, percentile)
                        )
 
-                assert canon_equal?({:value, low_elem}, Xb5.Bag.percentile(bag, percentile))
+                assert canon_equal?({:value, a}, Xb5.Bag.percentile(bag, percentile))
               else
-                low_perc = (low_rank - 1) / (size - 1)
-                high_perc = (high_rank - 1) / (size - 1)
-                perc_range = high_perc - low_perc
-                high_weight = (percentile - low_perc) / perc_range
-                low_weight = 1.0 - high_weight
+                perc_a = (low_rank - 1) / (size - 1)
+                perc_b = (high_rank - 1) / (size - 1)
+                perc_range = perc_b - perc_a
+                t = (percentile - perc_a) / perc_range
 
                 bracket = Xb5.Bag.percentile_bracket(bag, percentile)
 
                 case bracket do
-                  {:between, _low_b, _high_b} ->
+                  {:between, _low_b, _high_b, _t} ->
                     assert true
 
                   {:exact, _} ->
@@ -922,12 +921,12 @@ defmodule Xb5BagTest do
                     flunk("Unexpected bracket: #{inspect(other)}")
                 end
 
-                if is_number(low_elem) and is_number(high_elem) do
+                if is_number(a) and is_number(b) do
                   result = Xb5.Bag.percentile(bag, percentile)
 
                   case result do
                     {:value, v} ->
-                      expected = round_float_precision(low_weight * low_elem + high_weight * high_elem)
+                      expected = round_float_precision(a + t * (b - a))
                       assert round_float_precision(v) == expected
 
                     other ->
@@ -975,29 +974,28 @@ defmodule Xb5BagTest do
                    )
           else
             case Enum.slice(ref_elements, (low_rank - 1)..(high_rank - 1)) do
-              [low_elem, high_elem | _] ->
-                if low_elem == high_elem do
+              [a, b | _] ->
+                if a == b do
                   assert canon_equal?(
-                           {:exact, low_elem},
+                           {:exact, a},
                            Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :exclusive}])
                          )
 
                   assert canon_equal?(
-                           {:value, low_elem},
+                           {:value, a},
                            Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}])
                          )
                 else
-                  low_perc = low_rank / (size + 1)
-                  high_perc = high_rank / (size + 1)
-                  perc_range = high_perc - low_perc
-                  high_weight = (percentile - low_perc) / perc_range
-                  low_weight = 1.0 - high_weight
+                  perc_a = low_rank / (size + 1)
+                  perc_b = high_rank / (size + 1)
+                  perc_range = perc_b - perc_a
+                  t = (percentile - perc_a) / perc_range
 
                   bracket =
                     Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :exclusive}])
 
                   case bracket do
-                    {:between, _low_b, _high_b} ->
+                    {:between, _low_b, _high_b, _t} ->
                       assert true
 
                     {:exact, _} ->
@@ -1007,13 +1005,13 @@ defmodule Xb5BagTest do
                       flunk("Unexpected bracket: #{inspect(other)}")
                   end
 
-                  if is_number(low_elem) and is_number(high_elem) do
+                  if is_number(a) and is_number(b) do
                     result = Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}])
 
                     case result do
                       {:value, v} ->
                         expected =
-                          round_float_precision(low_weight * low_elem + high_weight * high_elem)
+                          round_float_precision(a + t * (b - a))
 
                         assert round_float_precision(v) == expected
 

@@ -264,9 +264,8 @@ defmodule Xb5.Set do
     end
 
     def reduce(set, acc, fun) do
-      set
-      |> Xb5.Set.to_list()
-      |> Enumerable.List.reduce(acc, fun)
+      %Xb5.Set{root: root} = set
+      :xb5_sets_node.elixir_reduce(fun, acc, root)
     end
   end
 

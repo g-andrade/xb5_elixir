@@ -53,10 +53,15 @@ defmodule Xb5.Tree do
     from_orddict(for pair <- to_list(tree), fun.(pair), do: pair)
   end
 
-  @doc "Builds a tree from a list of keys, all mapped to the same `value`."
-  @spec from_keys([key()], value()) :: t(key, value)
+  @doc "Builds a tree from `keys`, all mapped to the same `value`."
+  @spec from_keys(Enumerable.t(key()), value()) :: t(key, value)
   def from_keys(keys, value) do
-    from_orddict(for key <- keys, do: {key, value})
+    unique_keys_list =
+      keys
+      |> Enum.to_list()
+      |> :lists.usort()
+
+    from_orddict(for key <- unique_keys_list, do: {key, value})
   end
 
   @doc "Returns the value for `key`, or `default` if `key` is not present."
@@ -625,10 +630,8 @@ defmodule Xb5.Tree do
       {:ok, size, &Xb5.Tree.to_list/1}
     end
 
-    def reduce(tree, acc, fun) do
-      tree
-      |> Xb5.Tree.to_list()
-      |> Enumerable.List.reduce(acc, fun)
+    def reduce(%Xb5.Tree{root: root}, acc, fun) do
+      :xb5_trees_node.elixir_reduce(fun, acc, root)
     end
 
     ##
