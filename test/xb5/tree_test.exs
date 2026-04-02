@@ -1077,7 +1077,7 @@ defmodule Xb5TreeTest do
     test "inspect produces readable output for all tree sizes" do
       TTU.foreach_test_tree(fn _size, _ref_kvs, tree ->
         inspected = inspect(tree)
-        assert String.starts_with?(inspected, "Xb5.Tree.new(")
+        assert String.starts_with?(inspected, "Xb5.Tree[")
       end)
     end
   end
@@ -1327,7 +1327,6 @@ defmodule Xb5TreeTest do
 
   defp merge_lists(_fun, [], l2), do: l2
   defp merge_lists(_fun, l1, []), do: l1
-
 
   # ---------------------------------------------------------------------------
   # map helper

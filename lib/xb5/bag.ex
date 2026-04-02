@@ -10,13 +10,6 @@ defmodule Xb5.Bag do
 
   ## API
 
-  @doc "Adds `value` to the bag, always inserting a new copy even if already present."
-  @spec add(t(val), new_val) :: t(val | new_val) when val: value(), new_val: value()
-  def add(%__MODULE__{size: size, root: root} = set, value) do
-    root = :xb5_bag_node.add(value, root)
-    %{set | size: size + 1, root: root}
-  end
-
   @doc "Returns the number of times `value` appears in the bag."
   @spec count(t(value), value) :: non_neg_integer()
   def count(%__MODULE__{size: size, root: root}, value) do
@@ -219,6 +212,13 @@ defmodule Xb5.Bag do
       set = %{set | size: size - 1, root: root}
       {value, set}
     end
+  end
+
+  @doc "Pushes `value` to the bag, always inserting a new copy even if already present."
+  @spec push(t(val), new_val) :: t(val | new_val) when val: value(), new_val: value()
+  def push(%__MODULE__{size: size, root: root} = set, value) do
+    root = :xb5_bag_node.push(value, root)
+    %{set | size: size + 1, root: root}
   end
 
   @doc "Adds `value` to the bag only if it is not already present. Returns the bag unchanged if `value` is present."

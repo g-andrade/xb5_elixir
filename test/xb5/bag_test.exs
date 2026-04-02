@@ -14,7 +14,7 @@ defmodule Xb5BagTest do
         assert canon_list(Xb5.Bag.to_list(bag)) == canon_list(ref_elements)
         assert Xb5.Bag.size(bag) == size
 
-        assert canon_list(Xb5.Bag.to_list(BTU.new_bag_from_each_added(ref_elements))) ==
+        assert canon_list(Xb5.Bag.to_list(BTU.new_bag_from_each_pushed(ref_elements))) ==
                  canon_list(ref_elements)
       end)
     end
@@ -38,12 +38,12 @@ defmodule Xb5BagTest do
     end
   end
 
-  describe "add" do
+  describe "push" do
     test "always grows the bag, even for existing elements" do
       BTU.foreach_test_bag(fn size, ref_elements, bag ->
         TU.foreach_existing_element(
           fn elem ->
-            bag2 = Xb5.Bag.add(bag, elem)
+            bag2 = Xb5.Bag.push(bag, elem)
             assert Xb5.Bag.size(bag2) == size + 1
 
             assert canon_list(Xb5.Bag.to_list(bag2)) ==
@@ -55,7 +55,7 @@ defmodule Xb5BagTest do
 
         TU.foreach_non_existent_element(
           fn elem ->
-            bag2 = Xb5.Bag.add(bag, elem)
+            bag2 = Xb5.Bag.push(bag, elem)
             assert Xb5.Bag.size(bag2) == size + 1
 
             assert canon_list(Xb5.Bag.to_list(bag2)) ==
@@ -69,7 +69,7 @@ defmodule Xb5BagTest do
   end
 
   describe "put" do
-    test "putting an existing element is a no-op; putting a new one grows the bag" do
+    test "adding an existing element is a no-op; adding a new one grows the bag" do
       BTU.foreach_test_bag(fn size, ref_elements, bag ->
         TU.foreach_existing_element(
           fn elem ->
@@ -743,7 +743,10 @@ defmodule Xb5BagTest do
   end
 
   defp run_smaller_recur(expected, [last], bag) do
-    assert canon_equal?({:ok, expected}, Xb5.Bag.smaller(bag, TU.randomly_switch_number_type(last)))
+    assert canon_equal?(
+             {:ok, expected},
+             Xb5.Bag.smaller(bag, TU.randomly_switch_number_type(last))
+           )
 
     larger = TU.element_larger(last)
     assert larger > last
@@ -792,7 +795,10 @@ defmodule Xb5BagTest do
   end
 
   defp run_larger_recur(expected, [first], bag) do
-    assert canon_equal?({:ok, expected}, Xb5.Bag.larger(bag, TU.randomly_switch_number_type(first)))
+    assert canon_equal?(
+             {:ok, expected},
+             Xb5.Bag.larger(bag, TU.randomly_switch_number_type(first))
+           )
 
     smaller = TU.element_smaller(first)
     assert smaller < first

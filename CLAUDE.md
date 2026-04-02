@@ -53,8 +53,8 @@ deps/xb5/          Erlang source — read before assuming the API
 
 ### Bag-specific
 
-- `add/2` — always inserts a new copy even if already present.
-- `put/2` — idempotent (no-op if already present), analogous to `MapSet.put/2`.
+- `push/2` — always inserts a new copy even if already present.
+- `put/2` — idempotent (no-op if already present), analogous to `MapSet.put/2` / `gb_sets:add/2`.
 - No `put_new` on Bag.
 
 ## Deferred (not yet exposed in Elixir)

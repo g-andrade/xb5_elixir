@@ -25,12 +25,12 @@ defmodule Xb5BagTestUtils do
     end
   end
 
-  # new_bag_from_each_added/1: builds a bag by calling Xb5.Bag.add/2 for each element.
+  # new_bag_from_each_pushed/1: builds a bag by calling Xb5.Bag.push/2 for each element.
   # Asserts the initial bag has size 0.
-  def new_bag_from_each_added(list) do
+  def new_bag_from_each_pushed(list) do
     bag = Xb5.Bag.new()
     assert Xb5.Bag.size(bag) == 0
-    Enum.reduce(list, bag, fn elem, acc -> Xb5.Bag.add(acc, elem) end)
+    Enum.reduce(list, bag, fn elem, acc -> Xb5.Bag.push(acc, elem) end)
   end
 
   # maybe_shuffle_for_new_bag/1: returns list unchanged 2/3 of the time, shuffled 1/3.
@@ -49,7 +49,7 @@ defmodule Xb5BagTestUtils do
   # foreach_test_bag/1: calls fun.(size, ref_elements, bag) for 200 diverse sizes.
   def foreach_test_bag(fun) do
     foreach_tested_size(fn size, ref_elements ->
-      bag = new_bag_from_each_added(maybe_shuffle_for_new_bag(ref_elements))
+      bag = new_bag_from_each_pushed(maybe_shuffle_for_new_bag(ref_elements))
       assert Xb5.Bag.size(bag) == size
       fun.(size, ref_elements, bag)
     end)
