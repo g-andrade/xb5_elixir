@@ -8,7 +8,7 @@ idiomatic Elixir structs with full `Enumerable`, `Collectable`, and `Inspect` su
 
 Three modules are provided:
 
-- **`Xb5.Set`** — ordered set; a faster, sorted alternative to `MapSet`
+- **`Xb5.Set`** — ordered set; a sorted alternative to `MapSet`
 - **`Xb5.Tree`** — ordered key-value store; a sorted alternative to `Map`
 - **`Xb5.Bag`** — ordered [multiset](https://en.wikipedia.org/wiki/Set_(abstract_data_type)#Multiset)
   with order-statistic operations (percentile, rank)
