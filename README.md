@@ -3,15 +3,20 @@
 [![](https://img.shields.io/hexpm/v/xb5_elixir.svg?style=flat)](https://hex.pm/packages/xb5_elixir)
 
 Elixir wrapper around [xb5](https://github.com/g-andrade/xb5), an Erlang library of
-[B-tree](https://en.wikipedia.org/wiki/B-tree)-based (order 5) sorted containers. Provides
-idiomatic Elixir structs with full `Enumerable`, `Collectable`, and `Inspect` support.
+[B-tree](https://en.wikipedia.org/wiki/B-tree)-based (order 5) sorted containers.
+Provides idiomatic Elixir structs with full `Enumerable`, `Collectable`, and `Inspect`
+support.
+
+If you need ordered collections, `xb5` is [**1.2–2.5× faster**](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
+than Erlang/OTP's `gb_sets` and `gb_trees` for most operations, with equal or lower heap
+usage — and those gains carry over directly to `xb5_elixir`.
 
 Three modules are provided:
 
-- **`Xb5.Set`** — ordered set; a sorted alternative to `MapSet`
-- **`Xb5.Tree`** — ordered key-value store; a sorted alternative to `Map`
+- **`Xb5.Set`** — ordered set
+- **`Xb5.Tree`** — ordered key-value store
 - **`Xb5.Bag`** — ordered [multiset](https://en.wikipedia.org/wiki/Set_(abstract_data_type)#Multiset)
-  with order-statistic operations (percentile, rank)
+  with order-statistic operations (percentile, rank) and O(log n) random access via `Enum`
 
 ## Installation
 
@@ -141,6 +146,11 @@ iex> Enum.into([4, 5], bag)
 Xb5.Bag.new([1, 2, 3, 4, 5])
 ```
 
+`Enum.count/1` and `Enum.member?/2` run in O(1) and O(log n) respectively for all three.
+`Xb5.Bag` additionally provides O(log n) random access: because it is an order-statistic
+tree, `Enum.at/2` and other index-based operations locate elements by rank without
+traversing from the start.
+
 ### Comparison semantics
 
 All three collections use `==` (non-strict) for element equality, consistent with Erlang
@@ -170,13 +180,13 @@ iex> Xb5.Set.unwrap(elixir_set).size
 3
 ```
 
-## Performance
+## Benchmarks
 
-`xb5_elixir` is a thin wrapper; all heavy lifting is done by the underlying `xb5` Erlang
-library. See the [xb5 benchmarks](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
-for detailed comparisons against `gb_sets`/`gb_trees` across 50+ operations. In summary,
-`xb5` is **1.2–2.5× faster** than the OTP stdlib counterparts for most operations, with
-equal or lower heap usage.
+See the [xb5 benchmark report](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
+for detailed comparisons against `gb_sets`/`gb_trees` across 50+ operations and collection
+sizes up to 15,000 elements. A second report on an
+[Intel i5-3550](https://www.gandrade.net/xb5_benchmark/report_intel_i5_3550.html) is also
+available.
 
 ## License
 
