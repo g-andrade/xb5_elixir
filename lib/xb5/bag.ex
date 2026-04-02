@@ -214,7 +214,7 @@ defmodule Xb5.Bag do
     end
   end
 
-  @doc "Pushes `value` to the bag, always inserting a new copy even if already present."
+  @doc "Adds `value` to the bag, always inserting a new copy even if already present."
   @spec push(t(val), new_val) :: t(val | new_val) when val: value(), new_val: value()
   def push(%__MODULE__{size: size, root: root} = set, value) do
     root = :xb5_bag_node.push(value, root)
