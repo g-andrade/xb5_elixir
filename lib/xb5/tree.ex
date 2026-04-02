@@ -665,11 +665,13 @@ defmodule Xb5.Tree do
   defimpl Inspect do
     import Inspect.Algebra
 
-    def inspect(tree, opts) do
-      opts = %{opts | charlists: :as_lists}
-      pairs = Xb5.Tree.to_list(tree)
-      fun = fn {k, v}, opts -> concat([to_doc(k, opts), " => ", to_doc(v, opts)]) end
-      container_doc("Xb5.Tree[", pairs, "]", opts, fun, separator: ",", break: :strict)
+    def inspect(tree, %Inspect.Opts{} = opts) do
+      {doc, %{limit: limit}} =
+        tree
+        |> Xb5.Tree.to_list()
+        |> to_doc_with_opts(%{opts | charlists: :as_lists})
+
+      {concat(["Xb5.Tree.new(", doc, ")"]), %{opts | limit: limit}}
     end
   end
 end

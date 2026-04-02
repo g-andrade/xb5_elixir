@@ -8,7 +8,7 @@ defmodule Xb5.MixProject do
     mix_env = Mix.env()
 
     [
-      app: :xb5_lixir,
+      app: :xb5_elixir,
       version: @version,
       description: description(),
       elixir: "~> 1.7",
