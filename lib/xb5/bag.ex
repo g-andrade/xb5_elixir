@@ -17,7 +17,7 @@ defmodule Xb5.Bag do
 
   In addition to standard collection operations, `Xb5.Bag` provides:
 
-    * `fetch_index/2`, `fetch_index!/2`, `get_index/3` — 0-based rank of a value.
+    * `index_of/2`, `index_of!/2` — 0-based index of a value.
     * `percentile/3`, `percentile_bracket/3` — percentile queries.
     * `percentile_rank/2` — the percentile position of a value.
 
@@ -129,57 +129,6 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the 0-based index (rank) of `value` in the bag, or `:error` if not present.
-
-  ## Examples
-
-      iex> bag = Xb5.Bag.new([1, 2, 3])
-      iex> Xb5.Bag.fetch_index(bag, 1)
-      {:ok, 0}
-      iex> Xb5.Bag.fetch_index(bag, 3)
-      {:ok, 2}
-      iex> Xb5.Bag.fetch_index(bag, 4)
-      :error
-
-  """
-  @spec fetch_index(t(value), value) :: {:ok, non_neg_integer} | :error
-  def fetch_index(%__MODULE__{root: root}, value) do
-    case :xb5_bag_node.rank(value, root) do
-      :none ->
-        :error
-
-      rank ->
-        {:ok, rank - 1}
-    end
-  end
-
-  @doc """
-  Returns the 0-based index (rank) of `value` in the bag. Raises `KeyError` if not present.
-
-  ## Examples
-
-      iex> bag = Xb5.Bag.new([1, 2, 3])
-      iex> Xb5.Bag.fetch_index!(bag, 1)
-      0
-      iex> Xb5.Bag.fetch_index!(bag, 3)
-      2
-      iex> Xb5.Bag.fetch_index!(bag, 4)
-      ** (KeyError) key 4 not found in:
-          Xb5.Bag.new([1, 2, 3])
-
-  """
-  @spec fetch_index!(t(value), value) :: non_neg_integer
-  def fetch_index!(%__MODULE__{root: root} = bag, value) do
-    case :xb5_bag_node.rank(value, root) do
-      :none ->
-        raise KeyError, term: bag, key: value
-
-      rank ->
-        rank - 1
-    end
-  end
-
-  @doc """
   Returns a new bag containing only elements for which `fun` returns a truthy value.
 
   ## Examples
@@ -197,31 +146,47 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the 0-based index (rank) of `value` in the bag, or `default` if not present.
+  Returns the 0-based index of `value` in the bag, or `nil` if not present.
 
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 2, 3])
-      iex> Xb5.Bag.get_index(bag, 1)
+      iex> Xb5.Bag.index_of(bag, 1)
       0
-      iex> Xb5.Bag.get_index(bag, 3)
+      iex> Xb5.Bag.index_of(bag, 3)
       2
-      iex> Xb5.Bag.get_index(bag, 4)
+      iex> Xb5.Bag.index_of(bag, 4)
       nil
-      iex> Xb5.Bag.get_index(bag, 4, :missing)
-      :missing
 
   """
-  @spec get_index(t(value), value, default) :: non_neg_integer | default when default: term
-  def get_index(bag, value, default \\ nil)
-
-  def get_index(%__MODULE__{root: root}, value, default) do
+  @spec index_of(t(value), value) :: non_neg_integer | nil
+  def index_of(%__MODULE__{root: root}, value) do
     case :xb5_bag_node.rank(value, root) do
-      :none ->
-        default
+      :none -> nil
+      rank -> rank - 1
+    end
+  end
 
-      rank ->
-        rank - 1
+  @doc """
+  Returns the 0-based index of `value` in the bag. Raises `KeyError` if not present.
+
+  ## Examples
+
+      iex> bag = Xb5.Bag.new([1, 2, 3])
+      iex> Xb5.Bag.index_of!(bag, 1)
+      0
+      iex> Xb5.Bag.index_of!(bag, 3)
+      2
+      iex> Xb5.Bag.index_of!(bag, 4)
+      ** (KeyError) key 4 not found in:
+          Xb5.Bag.new([1, 2, 3])
+
+  """
+  @spec index_of!(t(value), value) :: non_neg_integer
+  def index_of!(%__MODULE__{root: root} = bag, value) do
+    case :xb5_bag_node.rank(value, root) do
+      :none -> raise KeyError, term: bag, key: value
+      rank -> rank - 1
     end
   end
 

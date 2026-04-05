@@ -1316,15 +1316,14 @@ defmodule Xb5BagTest do
   # Protocol coverage
   # ---------------------------------------------------------------------------
 
-  describe "fetch_index/get_index" do
-    test "fetch_index returns ok-tuple or error; fetch_index! raises on missing" do
+  describe "index_of" do
+    test "index_of returns 0-based index or nil; index_of! raises on missing" do
       BTU.foreach_test_bag(fn size, ref_elements, bag ->
         TU.foreach_existing_element(
           fn elem ->
             idx = Enum.find_index(ref_elements, fn e -> e == elem end)
-            assert Xb5.Bag.fetch_index(bag, elem) == {:ok, idx}
-            assert Xb5.Bag.fetch_index!(bag, elem) == idx
-            assert Xb5.Bag.get_index(bag, elem) == idx
+            assert Xb5.Bag.index_of(bag, elem) == idx
+            assert Xb5.Bag.index_of!(bag, elem) == idx
           end,
           ref_elements,
           min(5, size)
@@ -1332,10 +1331,8 @@ defmodule Xb5BagTest do
 
         TU.foreach_non_existent_element(
           fn elem ->
-            assert Xb5.Bag.fetch_index(bag, elem) == :error
-            assert_raise KeyError, fn -> Xb5.Bag.fetch_index!(bag, elem) end
-            assert Xb5.Bag.get_index(bag, elem) == nil
-            assert Xb5.Bag.get_index(bag, elem, :sentinel) == :sentinel
+            assert Xb5.Bag.index_of(bag, elem) == nil
+            assert_raise KeyError, fn -> Xb5.Bag.index_of!(bag, elem) end
           end,
           ref_elements,
           3

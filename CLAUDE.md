@@ -13,10 +13,13 @@ All three are B-trees of order 5. All Erlang types are opaque. `wrap/unwrap` con
 ## Dev commands
 
 ```bash
-mix test           # run tests
-mix test --cover   # run with coverage (93% threshold enforced)
-mix credo          # linter
-mix dialyzer       # type checking
+mix test                  # run all tests
+mix test --only bag       # run only Bag tests
+mix test --only set       # run only Set tests
+mix test --only tree      # run only Tree tests
+mix test --cover          # run with coverage (93% threshold enforced)
+mix credo                 # linter
+mix dialyzer              # type checking
 ```
 
 ## Project layout
@@ -47,9 +50,9 @@ deps/xb5/          Erlang source — read before assuming the API
 - `filter/2` fun is wrapped for Elixir truthy semantics.
 - `map/2` on Set returns a new set (not a list); on Tree transforms values.
 - `symmetric_difference/2` implemented at Elixir level as `union(difference(a,b), difference(b,a))`.
-- Bang functions (`largest!/1`, `smallest!/1`, `pop_largest!/1`, `pop_smallest!/1`, `fetch_index!/2`, etc.)
+- Bang functions (`largest!/1`, `smallest!/1`, `pop_largest!/1`, `pop_smallest!/1`, `index_of!/2`, etc.)
   raise `ArgumentError` on empty collections and `KeyError` on missing keys.
-- `fetch_index/2`, `fetch_index!/2`, `get_index/3` are **0-based** (Elixir idiom).
+- `index_of/2`, `index_of!/2` are **0-based** (Elixir idiom).
 
 ### Bag-specific
 
