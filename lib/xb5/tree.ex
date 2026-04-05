@@ -317,7 +317,8 @@ defmodule Xb5.Tree do
           {current_value, t()}
         when current_value: value()
   def get_and_update!(%__MODULE__{root: root} = tree, key, fun) do
-    value = :xb5_trees_node.get_att(key, root, &fetch_bang_found/2, &fetch_bang_not_found(tree, &1))
+    value =
+      :xb5_trees_node.get_att(key, root, &fetch_bang_found/2, &fetch_bang_not_found(tree, &1))
 
     case fun.(value) do
       {current_value, new_value} ->
