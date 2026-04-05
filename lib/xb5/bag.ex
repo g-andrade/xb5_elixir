@@ -345,16 +345,16 @@ defmodule Xb5.Bag do
 
       iex> bag = Xb5.Bag.new([1, 2, 3, 4])
       iex> Xb5.Bag.percentile(bag, 0.0)
-      {:value, 1}
+      1
       iex> Xb5.Bag.percentile(bag, 0.5)
-      {:value, 2.5}
+      2.5
       iex> Xb5.Bag.percentile(bag, 1.0)
-      {:value, 4}
+      4
       iex> Xb5.Bag.percentile(Xb5.Bag.new(), 0.5)
-      :none
+      nil
 
   """
-  @spec percentile(t(value), percentile, opts) :: {:value, value | interpolation_result} | :none
+  @spec percentile(t(value), percentile, opts) :: (value | interpolation_result) | nil
         when percentile: :xb5_bag_utils.percentile(),
              opts: [:xb5_bag_utils.percentile_bracket_opt()],
              interpolation_result: number
@@ -362,9 +362,12 @@ defmodule Xb5.Bag do
   def percentile(bag, percentile, opts \\ [])
 
   def percentile(%__MODULE__{size: size, root: root}, percentile, opts) do
-    # FIXME review returned value
-    value_fun = fn value -> {:value, value} end
-    :xb5_bag_utils.percentile(percentile, size, root, value_fun, opts)
+    value_fun = fn value -> value end
+
+    case :xb5_bag_utils.percentile(percentile, size, root, value_fun, opts) do
+      :none -> nil
+      result -> result
+    end
   end
 
   @doc """
@@ -377,22 +380,25 @@ defmodule Xb5.Bag do
       iex> Xb5.Bag.percentile_bracket(bag, 0.0)
       {:exact, 1}
       iex> Xb5.Bag.percentile_bracket(bag, 0.5)
-      {:between, 2, 3}
+      {:between, 2, 3, 0.5}
       iex> Xb5.Bag.percentile_bracket(bag, 1.0)
       {:exact, 4}
       iex> Xb5.Bag.percentile_bracket(Xb5.Bag.new(), 0.5)
-      :none
+      nil
 
   """
-  @spec percentile_bracket(t(value), percentile, opts) :: percentile_bracket
+  @spec percentile_bracket(t(value), percentile, opts) ::
+          {:exact, value} | {:between, value, value, float} | nil
         when percentile: :xb5_bag_utils.percentile(),
-             opts: [:xb5_bag_utils.percentile_bracket_opt()],
-             percentile_bracket: :xb5_bag_utils.percentile_bracket(value)
+             opts: [:xb5_bag_utils.percentile_bracket_opt()]
 
   def percentile_bracket(bag, percentile, opts \\ [])
 
   def percentile_bracket(%__MODULE__{size: size, root: root}, percentile, opts) do
-    :xb5_bag_utils.percentile_bracket(percentile, size, root, opts)
+    case :xb5_bag_utils.percentile_bracket(percentile, size, root, opts) do
+      :none -> nil
+      result -> result
+    end
   end
 
   @doc """

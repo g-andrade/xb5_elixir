@@ -291,77 +291,77 @@ defmodule Xb5BagTest do
       ref_elements = Xb5.Bag.to_list(bag)
 
       # Inclusive
-      assert canon_equal?({:value, 1}, inclusive_percentile_rounded(0, bag))
-      assert canon_equal?({:value, 1.15}, inclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?({:value, 1.3}, inclusive_percentile_rounded(0.1, bag))
-      assert canon_equal?({:value, 1.45}, inclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 1.6}, inclusive_percentile_rounded(0.2, bag))
-      assert canon_equal?({:value, 1.75}, inclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 1.9}, inclusive_percentile_rounded(0.3, bag))
-      assert canon_equal?({:value, 2.05}, inclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 2.2}, inclusive_percentile_rounded(0.4, bag))
-      assert canon_equal?({:value, 2.35}, inclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 2.5}, inclusive_percentile_rounded(0.5, bag))
-      assert canon_equal?({:value, 2.65}, inclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 2.8}, inclusive_percentile_rounded(0.6, bag))
-      assert canon_equal?({:value, 2.95}, inclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 3.1}, inclusive_percentile_rounded(0.7, bag))
-      assert canon_equal?({:value, 3.25}, inclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 3.4}, inclusive_percentile_rounded(0.8, bag))
-      assert canon_equal?({:value, 3.55}, inclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?({:value, 3.7}, inclusive_percentile_rounded(0.9, bag))
-      assert canon_equal?({:value, 3.85}, inclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?({:value, 4}, inclusive_percentile_rounded(1, bag))
+      assert canon_equal?(1, inclusive_percentile_rounded(0, bag))
+      assert canon_equal?(1.15, inclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(1.3, inclusive_percentile_rounded(0.1, bag))
+      assert canon_equal?(1.45, inclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(1.6, inclusive_percentile_rounded(0.2, bag))
+      assert canon_equal?(1.75, inclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(1.9, inclusive_percentile_rounded(0.3, bag))
+      assert canon_equal?(2.05, inclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(2.2, inclusive_percentile_rounded(0.4, bag))
+      assert canon_equal?(2.35, inclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(2.5, inclusive_percentile_rounded(0.5, bag))
+      assert canon_equal?(2.65, inclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(2.8, inclusive_percentile_rounded(0.6, bag))
+      assert canon_equal?(2.95, inclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(3.1, inclusive_percentile_rounded(0.7, bag))
+      assert canon_equal?(3.25, inclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(3.4, inclusive_percentile_rounded(0.8, bag))
+      assert canon_equal?(3.55, inclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(3.7, inclusive_percentile_rounded(0.9, bag))
+      assert canon_equal?(3.85, inclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(4, inclusive_percentile_rounded(1, bag))
 
       test_valid_percentile_inclusive(size, ref_elements, bag)
 
       # Exclusive
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.00, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.10, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 1}, exclusive_percentile_rounded(0.20, bag))
-      assert canon_equal?({:value, 1.25}, exclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 1.5}, exclusive_percentile_rounded(0.30, bag))
-      assert canon_equal?({:value, 1.75}, exclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 2}, exclusive_percentile_rounded(0.40, bag))
-      assert canon_equal?({:value, 2.25}, exclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 2.5}, exclusive_percentile_rounded(0.50, bag))
-      assert canon_equal?({:value, 2.75}, exclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 3}, exclusive_percentile_rounded(0.60, bag))
-      assert canon_equal?({:value, 3.25}, exclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 3.5}, exclusive_percentile_rounded(0.70, bag))
-      assert canon_equal?({:value, 3.75}, exclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 4}, exclusive_percentile_rounded(0.80, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.90, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(1.00, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.00, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.10, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(1, exclusive_percentile_rounded(0.20, bag))
+      assert canon_equal?(1.25, exclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(1.5, exclusive_percentile_rounded(0.30, bag))
+      assert canon_equal?(1.75, exclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(2, exclusive_percentile_rounded(0.40, bag))
+      assert canon_equal?(2.25, exclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(2.5, exclusive_percentile_rounded(0.50, bag))
+      assert canon_equal?(2.75, exclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(3, exclusive_percentile_rounded(0.60, bag))
+      assert canon_equal?(3.25, exclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(3.5, exclusive_percentile_rounded(0.70, bag))
+      assert canon_equal?(3.75, exclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(4, exclusive_percentile_rounded(0.80, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.90, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(1.00, bag))
 
       test_valid_percentile_exclusive(size, ref_elements, bag)
 
       # Nearest rank
-      assert canon_equal?(:none, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
+      assert canon_equal?(nil, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
 
       test_valid_percentile_nearest_rank(size, ref_elements, bag)
     end
@@ -374,77 +374,77 @@ defmodule Xb5BagTest do
       ref_elements = Xb5.Bag.to_list(bag)
 
       # Inclusive
-      assert canon_equal?({:value, 1}, inclusive_percentile_rounded(0.00, bag))
-      assert canon_equal?({:value, 1.2}, inclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?({:value, 1.4}, inclusive_percentile_rounded(0.10, bag))
-      assert canon_equal?({:value, 1.6}, inclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 1.8}, inclusive_percentile_rounded(0.20, bag))
-      assert canon_equal?({:value, 2}, inclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 2.2}, inclusive_percentile_rounded(0.30, bag))
-      assert canon_equal?({:value, 2.4}, inclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 2.6}, inclusive_percentile_rounded(0.40, bag))
-      assert canon_equal?({:value, 2.8}, inclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 3}, inclusive_percentile_rounded(0.50, bag))
-      assert canon_equal?({:value, 3.2}, inclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 3.4}, inclusive_percentile_rounded(0.60, bag))
-      assert canon_equal?({:value, 3.6}, inclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 3.8}, inclusive_percentile_rounded(0.70, bag))
-      assert canon_equal?({:value, 4}, inclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 4.2}, inclusive_percentile_rounded(0.80, bag))
-      assert canon_equal?({:value, 4.4}, inclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?({:value, 4.6}, inclusive_percentile_rounded(0.90, bag))
-      assert canon_equal?({:value, 4.8}, inclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?({:value, 5}, inclusive_percentile_rounded(1.00, bag))
+      assert canon_equal?(1, inclusive_percentile_rounded(0.00, bag))
+      assert canon_equal?(1.2, inclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(1.4, inclusive_percentile_rounded(0.10, bag))
+      assert canon_equal?(1.6, inclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(1.8, inclusive_percentile_rounded(0.20, bag))
+      assert canon_equal?(2, inclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(2.2, inclusive_percentile_rounded(0.30, bag))
+      assert canon_equal?(2.4, inclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(2.6, inclusive_percentile_rounded(0.40, bag))
+      assert canon_equal?(2.8, inclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(3, inclusive_percentile_rounded(0.50, bag))
+      assert canon_equal?(3.2, inclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(3.4, inclusive_percentile_rounded(0.60, bag))
+      assert canon_equal?(3.6, inclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(3.8, inclusive_percentile_rounded(0.70, bag))
+      assert canon_equal?(4, inclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(4.2, inclusive_percentile_rounded(0.80, bag))
+      assert canon_equal?(4.4, inclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(4.6, inclusive_percentile_rounded(0.90, bag))
+      assert canon_equal?(4.8, inclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(5, inclusive_percentile_rounded(1.00, bag))
 
       test_valid_percentile_inclusive(size, ref_elements, bag)
 
       # Exclusive
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.00, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.10, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 1.2}, exclusive_percentile_rounded(0.20, bag))
-      assert canon_equal?({:value, 1.5}, exclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 1.8}, exclusive_percentile_rounded(0.30, bag))
-      assert canon_equal?({:value, 2.1}, exclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 2.4}, exclusive_percentile_rounded(0.40, bag))
-      assert canon_equal?({:value, 2.7}, exclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 3}, exclusive_percentile_rounded(0.50, bag))
-      assert canon_equal?({:value, 3.3}, exclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 3.6}, exclusive_percentile_rounded(0.60, bag))
-      assert canon_equal?({:value, 3.9}, exclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 4.2}, exclusive_percentile_rounded(0.70, bag))
-      assert canon_equal?({:value, 4.5}, exclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 4.8}, exclusive_percentile_rounded(0.80, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.90, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(1.00, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.00, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.10, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(1.2, exclusive_percentile_rounded(0.20, bag))
+      assert canon_equal?(1.5, exclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(1.8, exclusive_percentile_rounded(0.30, bag))
+      assert canon_equal?(2.1, exclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(2.4, exclusive_percentile_rounded(0.40, bag))
+      assert canon_equal?(2.7, exclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(3, exclusive_percentile_rounded(0.50, bag))
+      assert canon_equal?(3.3, exclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(3.6, exclusive_percentile_rounded(0.60, bag))
+      assert canon_equal?(3.9, exclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(4.2, exclusive_percentile_rounded(0.70, bag))
+      assert canon_equal?(4.5, exclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(4.8, exclusive_percentile_rounded(0.80, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.90, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(1.00, bag))
 
       test_valid_percentile_exclusive(size, ref_elements, bag)
 
       # Nearest rank
-      assert canon_equal?(:none, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
+      assert canon_equal?(nil, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
 
       test_valid_percentile_nearest_rank(size, ref_elements, bag)
     end
@@ -457,77 +457,77 @@ defmodule Xb5BagTest do
       ref_elements = Xb5.Bag.to_list(bag)
 
       # Inclusive
-      assert canon_equal?({:value, 1}, inclusive_percentile_rounded(0.00, bag))
-      assert canon_equal?({:value, 1.25}, inclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?({:value, 1.5}, inclusive_percentile_rounded(0.10, bag))
-      assert canon_equal?({:value, 1.75}, inclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 2}, inclusive_percentile_rounded(0.20, bag))
-      assert canon_equal?({:value, 2.25}, inclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 2.5}, inclusive_percentile_rounded(0.30, bag))
-      assert canon_equal?({:value, 2.75}, inclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 3}, inclusive_percentile_rounded(0.40, bag))
-      assert canon_equal?({:value, 3.25}, inclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 3.5}, inclusive_percentile_rounded(0.50, bag))
-      assert canon_equal?({:value, 3.75}, inclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 4}, inclusive_percentile_rounded(0.60, bag))
-      assert canon_equal?({:value, 4.25}, inclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 4.5}, inclusive_percentile_rounded(0.70, bag))
-      assert canon_equal?({:value, 4.75}, inclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 5}, inclusive_percentile_rounded(0.80, bag))
-      assert canon_equal?({:value, 5.25}, inclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?({:value, 5.5}, inclusive_percentile_rounded(0.90, bag))
-      assert canon_equal?({:value, 5.75}, inclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?({:value, 6}, inclusive_percentile_rounded(1.00, bag))
+      assert canon_equal?(1, inclusive_percentile_rounded(0.00, bag))
+      assert canon_equal?(1.25, inclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(1.5, inclusive_percentile_rounded(0.10, bag))
+      assert canon_equal?(1.75, inclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(2, inclusive_percentile_rounded(0.20, bag))
+      assert canon_equal?(2.25, inclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(2.5, inclusive_percentile_rounded(0.30, bag))
+      assert canon_equal?(2.75, inclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(3, inclusive_percentile_rounded(0.40, bag))
+      assert canon_equal?(3.25, inclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(3.5, inclusive_percentile_rounded(0.50, bag))
+      assert canon_equal?(3.75, inclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(4, inclusive_percentile_rounded(0.60, bag))
+      assert canon_equal?(4.25, inclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(4.5, inclusive_percentile_rounded(0.70, bag))
+      assert canon_equal?(4.75, inclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(5, inclusive_percentile_rounded(0.80, bag))
+      assert canon_equal?(5.25, inclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(5.5, inclusive_percentile_rounded(0.90, bag))
+      assert canon_equal?(5.75, inclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(6, inclusive_percentile_rounded(1.00, bag))
 
       test_valid_percentile_inclusive(size, ref_elements, bag)
 
       # Exclusive
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.00, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.10, bag))
-      assert canon_equal?({:value, 1.05}, exclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 1.4}, exclusive_percentile_rounded(0.20, bag))
-      assert canon_equal?({:value, 1.75}, exclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 2.1}, exclusive_percentile_rounded(0.30, bag))
-      assert canon_equal?({:value, 2.45}, exclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 2.8}, exclusive_percentile_rounded(0.40, bag))
-      assert canon_equal?({:value, 3.15}, exclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 3.5}, exclusive_percentile_rounded(0.50, bag))
-      assert canon_equal?({:value, 3.85}, exclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 4.2}, exclusive_percentile_rounded(0.60, bag))
-      assert canon_equal?({:value, 4.55}, exclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 4.9}, exclusive_percentile_rounded(0.70, bag))
-      assert canon_equal?({:value, 5.25}, exclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 5.6}, exclusive_percentile_rounded(0.80, bag))
-      assert canon_equal?({:value, 5.95}, exclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.90, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(1.00, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.00, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.10, bag))
+      assert canon_equal?(1.05, exclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(1.4, exclusive_percentile_rounded(0.20, bag))
+      assert canon_equal?(1.75, exclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(2.1, exclusive_percentile_rounded(0.30, bag))
+      assert canon_equal?(2.45, exclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(2.8, exclusive_percentile_rounded(0.40, bag))
+      assert canon_equal?(3.15, exclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(3.5, exclusive_percentile_rounded(0.50, bag))
+      assert canon_equal?(3.85, exclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(4.2, exclusive_percentile_rounded(0.60, bag))
+      assert canon_equal?(4.55, exclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(4.9, exclusive_percentile_rounded(0.70, bag))
+      assert canon_equal?(5.25, exclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(5.6, exclusive_percentile_rounded(0.80, bag))
+      assert canon_equal?(5.95, exclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.90, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(1.00, bag))
 
       test_valid_percentile_exclusive(size, ref_elements, bag)
 
       # Nearest rank
-      assert canon_equal?(:none, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 6}, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 6}, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 6}, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 6}, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
+      assert canon_equal?(nil, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
+      assert canon_equal?(6, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
+      assert canon_equal?(6, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
+      assert canon_equal?(6, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
+      assert canon_equal?(6, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
 
       test_valid_percentile_nearest_rank(size, ref_elements, bag)
     end
@@ -540,77 +540,77 @@ defmodule Xb5BagTest do
       ref_elements = Xb5.Bag.to_list(bag)
 
       # Inclusive
-      assert canon_equal?({:value, 1}, inclusive_percentile_rounded(0.00, bag))
-      assert canon_equal?({:value, 1.1}, inclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?({:value, 2}, inclusive_percentile_rounded(0.10, bag))
-      assert canon_equal?({:value, 2}, inclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 2.4}, inclusive_percentile_rounded(0.20, bag))
-      assert canon_equal?({:value, 3}, inclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 3}, inclusive_percentile_rounded(0.30, bag))
-      assert canon_equal?({:value, 3}, inclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 3.8}, inclusive_percentile_rounded(0.40, bag))
-      assert canon_equal?({:value, 4}, inclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 4}, inclusive_percentile_rounded(0.50, bag))
-      assert canon_equal?({:value, 5}, inclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 5.2}, inclusive_percentile_rounded(0.60, bag))
-      assert canon_equal?({:value, 6.3}, inclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 7.4}, inclusive_percentile_rounded(0.70, bag))
-      assert canon_equal?({:value, 8.5}, inclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 9}, inclusive_percentile_rounded(0.80, bag))
-      assert canon_equal?({:value, 9}, inclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?({:value, 9}, inclusive_percentile_rounded(0.90, bag))
-      assert canon_equal?({:value, 9}, inclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?({:value, 9}, inclusive_percentile_rounded(1.00, bag))
+      assert canon_equal?(1, inclusive_percentile_rounded(0.00, bag))
+      assert canon_equal?(1.1, inclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(2, inclusive_percentile_rounded(0.10, bag))
+      assert canon_equal?(2, inclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(2.4, inclusive_percentile_rounded(0.20, bag))
+      assert canon_equal?(3, inclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(3, inclusive_percentile_rounded(0.30, bag))
+      assert canon_equal?(3, inclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(3.8, inclusive_percentile_rounded(0.40, bag))
+      assert canon_equal?(4, inclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(4, inclusive_percentile_rounded(0.50, bag))
+      assert canon_equal?(5, inclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(5.2, inclusive_percentile_rounded(0.60, bag))
+      assert canon_equal?(6.3, inclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(7.4, inclusive_percentile_rounded(0.70, bag))
+      assert canon_equal?(8.5, inclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(9, inclusive_percentile_rounded(0.80, bag))
+      assert canon_equal?(9, inclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(9, inclusive_percentile_rounded(0.90, bag))
+      assert canon_equal?(9, inclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(9, inclusive_percentile_rounded(1.00, bag))
 
       test_valid_percentile_inclusive(size, ref_elements, bag)
 
       # Exclusive
-      assert canon_equal?(:none, exclusive_percentile_rounded(0.00, bag))
-      assert canon_equal?({:value, 1}, exclusive_percentile_rounded(0.05, bag))
-      assert canon_equal?({:value, 1.4}, exclusive_percentile_rounded(0.10, bag))
-      assert canon_equal?({:value, 2}, exclusive_percentile_rounded(0.15, bag))
-      assert canon_equal?({:value, 2}, exclusive_percentile_rounded(0.20, bag))
-      assert canon_equal?({:value, 3}, exclusive_percentile_rounded(0.25, bag))
-      assert canon_equal?({:value, 3}, exclusive_percentile_rounded(0.30, bag))
-      assert canon_equal?({:value, 3}, exclusive_percentile_rounded(0.35, bag))
-      assert canon_equal?({:value, 3.6}, exclusive_percentile_rounded(0.40, bag))
-      assert canon_equal?({:value, 4}, exclusive_percentile_rounded(0.45, bag))
-      assert canon_equal?({:value, 4}, exclusive_percentile_rounded(0.50, bag))
-      assert canon_equal?({:value, 5}, exclusive_percentile_rounded(0.55, bag))
-      assert canon_equal?({:value, 5.4}, exclusive_percentile_rounded(0.60, bag))
-      assert canon_equal?({:value, 6.6}, exclusive_percentile_rounded(0.65, bag))
-      assert canon_equal?({:value, 7.8}, exclusive_percentile_rounded(0.70, bag))
-      assert canon_equal?({:value, 9}, exclusive_percentile_rounded(0.75, bag))
-      assert canon_equal?({:value, 9}, exclusive_percentile_rounded(0.80, bag))
-      assert canon_equal?({:value, 9}, exclusive_percentile_rounded(0.85, bag))
-      assert canon_equal?({:value, 9}, exclusive_percentile_rounded(0.90, bag))
-      assert canon_equal?({:value, 9}, exclusive_percentile_rounded(0.95, bag))
-      assert canon_equal?(:none, exclusive_percentile_rounded(1.00, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(0.00, bag))
+      assert canon_equal?(1, exclusive_percentile_rounded(0.05, bag))
+      assert canon_equal?(1.4, exclusive_percentile_rounded(0.10, bag))
+      assert canon_equal?(2, exclusive_percentile_rounded(0.15, bag))
+      assert canon_equal?(2, exclusive_percentile_rounded(0.20, bag))
+      assert canon_equal?(3, exclusive_percentile_rounded(0.25, bag))
+      assert canon_equal?(3, exclusive_percentile_rounded(0.30, bag))
+      assert canon_equal?(3, exclusive_percentile_rounded(0.35, bag))
+      assert canon_equal?(3.6, exclusive_percentile_rounded(0.40, bag))
+      assert canon_equal?(4, exclusive_percentile_rounded(0.45, bag))
+      assert canon_equal?(4, exclusive_percentile_rounded(0.50, bag))
+      assert canon_equal?(5, exclusive_percentile_rounded(0.55, bag))
+      assert canon_equal?(5.4, exclusive_percentile_rounded(0.60, bag))
+      assert canon_equal?(6.6, exclusive_percentile_rounded(0.65, bag))
+      assert canon_equal?(7.8, exclusive_percentile_rounded(0.70, bag))
+      assert canon_equal?(9, exclusive_percentile_rounded(0.75, bag))
+      assert canon_equal?(9, exclusive_percentile_rounded(0.80, bag))
+      assert canon_equal?(9, exclusive_percentile_rounded(0.85, bag))
+      assert canon_equal?(9, exclusive_percentile_rounded(0.90, bag))
+      assert canon_equal?(9, exclusive_percentile_rounded(0.95, bag))
+      assert canon_equal?(nil, exclusive_percentile_rounded(1.00, bag))
 
       test_valid_percentile_exclusive(size, ref_elements, bag)
 
       # Nearest rank
-      assert canon_equal?(:none, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 1}, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 2}, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 3}, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 4}, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 5}, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 6}, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 8}, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 9}, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 9}, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 9}, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 9}, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 9}, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
-      assert canon_equal?({:value, 9}, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
+      assert canon_equal?(nil, Xb5.Bag.percentile(bag, 0.00, [{:method, :nearest_rank}]))
+      assert canon_equal?(1, Xb5.Bag.percentile(bag, 0.05, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.1, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.15, [{:method, :nearest_rank}]))
+      assert canon_equal?(2, Xb5.Bag.percentile(bag, 0.2, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.25, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.3, [{:method, :nearest_rank}]))
+      assert canon_equal?(3, Xb5.Bag.percentile(bag, 0.35, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.4, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.45, [{:method, :nearest_rank}]))
+      assert canon_equal?(4, Xb5.Bag.percentile(bag, 0.5, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.55, [{:method, :nearest_rank}]))
+      assert canon_equal?(5, Xb5.Bag.percentile(bag, 0.6, [{:method, :nearest_rank}]))
+      assert canon_equal?(6, Xb5.Bag.percentile(bag, 0.65, [{:method, :nearest_rank}]))
+      assert canon_equal?(8, Xb5.Bag.percentile(bag, 0.7, [{:method, :nearest_rank}]))
+      assert canon_equal?(9, Xb5.Bag.percentile(bag, 0.75, [{:method, :nearest_rank}]))
+      assert canon_equal?(9, Xb5.Bag.percentile(bag, 0.8, [{:method, :nearest_rank}]))
+      assert canon_equal?(9, Xb5.Bag.percentile(bag, 0.85, [{:method, :nearest_rank}]))
+      assert canon_equal?(9, Xb5.Bag.percentile(bag, 0.9, [{:method, :nearest_rank}]))
+      assert canon_equal?(9, Xb5.Bag.percentile(bag, 0.95, [{:method, :nearest_rank}]))
+      assert canon_equal?(9, Xb5.Bag.percentile(bag, 1, [{:method, :nearest_rank}]))
 
       test_valid_percentile_nearest_rank(size, ref_elements, bag)
     end
@@ -928,8 +928,8 @@ defmodule Xb5BagTest do
   defp test_valid_percentile_inclusive(0 = size, _ref_elements, bag) do
     foreach_percentile(
       fn percentile, _low, _high ->
-        assert Xb5.Bag.percentile_bracket(bag, percentile) == :none
-        assert Xb5.Bag.percentile(bag, percentile) == :none
+        assert Xb5.Bag.percentile_bracket(bag, percentile) == nil
+        assert Xb5.Bag.percentile(bag, percentile) == nil
       end,
       size,
       :inclusive
@@ -942,7 +942,7 @@ defmodule Xb5BagTest do
         if low_rank == high_rank do
           exact_elem = Enum.at(ref_elements, low_rank - 1)
           assert canon_equal?({:exact, exact_elem}, Xb5.Bag.percentile_bracket(bag, percentile))
-          assert canon_equal?({:value, exact_elem}, Xb5.Bag.percentile(bag, percentile))
+          assert canon_equal?(exact_elem, Xb5.Bag.percentile(bag, percentile))
         else
           case Enum.slice(ref_elements, (low_rank - 1)..(high_rank - 1)) do
             [a, b | _] ->
@@ -952,7 +952,7 @@ defmodule Xb5BagTest do
                          Xb5.Bag.percentile_bracket(bag, percentile)
                        )
 
-                assert canon_equal?({:value, a}, Xb5.Bag.percentile(bag, percentile))
+                assert canon_equal?(a, Xb5.Bag.percentile(bag, percentile))
               else
                 perc_a = (low_rank - 1) / (size - 1)
                 perc_b = (high_rank - 1) / (size - 1)
@@ -974,15 +974,8 @@ defmodule Xb5BagTest do
 
                 if is_number(a) and is_number(b) do
                   result = Xb5.Bag.percentile(bag, percentile)
-
-                  case result do
-                    {:value, v} ->
-                      expected = round_float_precision(a + t * (b - a))
-                      assert round_float_precision(v) == expected
-
-                    other ->
-                      flunk("Unexpected percentile result: #{inspect(other)}")
-                  end
+                  expected = round_float_precision(a + t * (b - a))
+                  assert round_float_precision(result) == expected
                 end
               end
           end
@@ -996,8 +989,8 @@ defmodule Xb5BagTest do
   defp test_valid_percentile_exclusive(0 = size, _ref_elements, bag) do
     foreach_percentile(
       fn percentile, _low, _high ->
-        assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :exclusive}]) == :none
-        assert Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}]) == :none
+        assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :exclusive}]) == nil
+        assert Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}]) == nil
       end,
       size,
       :exclusive
@@ -1008,8 +1001,8 @@ defmodule Xb5BagTest do
     foreach_percentile(
       fn percentile, low_rank, high_rank ->
         if low_rank < 1 or high_rank > size do
-          assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :exclusive}]) == :none
-          assert Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}]) == :none
+          assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :exclusive}]) == nil
+          assert Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}]) == nil
         else
           if low_rank == high_rank do
             exact_elem = Enum.at(ref_elements, low_rank - 1)
@@ -1020,7 +1013,7 @@ defmodule Xb5BagTest do
                    )
 
             assert canon_equal?(
-                     {:value, exact_elem},
+                     exact_elem,
                      Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}])
                    )
           else
@@ -1033,7 +1026,7 @@ defmodule Xb5BagTest do
                          )
 
                   assert canon_equal?(
-                           {:value, a},
+                           a,
                            Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}])
                          )
                 else
@@ -1058,17 +1051,8 @@ defmodule Xb5BagTest do
 
                   if is_number(a) and is_number(b) do
                     result = Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}])
-
-                    case result do
-                      {:value, v} ->
-                        expected =
-                          round_float_precision(a + t * (b - a))
-
-                        assert round_float_precision(v) == expected
-
-                      other ->
-                        flunk("Unexpected percentile result: #{inspect(other)}")
-                    end
+                    expected = round_float_precision(a + t * (b - a))
+                    assert round_float_precision(result) == expected
                   end
                 end
             end
@@ -1083,8 +1067,8 @@ defmodule Xb5BagTest do
   defp test_valid_percentile_nearest_rank(0 = size, _ref_elements, bag) do
     foreach_percentile(
       fn percentile, _low, _high ->
-        assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :nearest_rank}]) == :none
-        assert Xb5.Bag.percentile(bag, percentile, [{:method, :nearest_rank}]) == :none
+        assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :nearest_rank}]) == nil
+        assert Xb5.Bag.percentile(bag, percentile, [{:method, :nearest_rank}]) == nil
       end,
       size,
       :nearest_rank
@@ -1095,8 +1079,8 @@ defmodule Xb5BagTest do
     foreach_percentile(
       fn percentile, _low_rank, exact_rank ->
         if exact_rank == 0 do
-          assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :nearest_rank}]) == :none
-          assert Xb5.Bag.percentile(bag, percentile, [{:method, :nearest_rank}]) == :none
+          assert Xb5.Bag.percentile_bracket(bag, percentile, [{:method, :nearest_rank}]) == nil
+          assert Xb5.Bag.percentile(bag, percentile, [{:method, :nearest_rank}]) == nil
         else
           exact_elem = Enum.at(ref_elements, exact_rank - 1)
 
@@ -1106,7 +1090,7 @@ defmodule Xb5BagTest do
                  )
 
           assert canon_equal?(
-                   {:value, exact_elem},
+                   exact_elem,
                    Xb5.Bag.percentile(bag, percentile, [{:method, :nearest_rank}])
                  )
         end
@@ -1161,14 +1145,9 @@ defmodule Xb5BagTest do
 
   defp percentile_rounded(percentile, bag, opts) do
     case Xb5.Bag.percentile(bag, percentile, opts) do
-      {:value, value} when is_integer(value) ->
-        {:value, value}
-
-      {:value, value} when is_float(value) ->
-        {:value, round_float_precision(value)}
-
-      :none ->
-        :none
+      nil -> nil
+      value when is_integer(value) -> value
+      value when is_float(value) -> round_float_precision(value)
     end
   end
 
