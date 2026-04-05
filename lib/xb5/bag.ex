@@ -181,6 +181,62 @@ defmodule Xb5.Bag do
   end
 
   @doc """
+  Returns the first (smallest) element in the bag, or `default` if the bag is empty.
+
+  ## Examples
+
+      iex> Xb5.Bag.first(Xb5.Bag.new([1, 2, 3]))
+      1
+      iex> Xb5.Bag.first(Xb5.Bag.new())
+      nil
+      iex> Xb5.Bag.first(Xb5.Bag.new(), :empty)
+      :empty
+
+  """
+  @spec first(t(value), default) :: value | default when default: term()
+  def first(bag, default \\ nil)
+
+  def first(%__MODULE__{size: size, root: root}, default) do
+    if size === 0, do: default, else: :xb5_bag_node.smallest(root)
+  end
+
+  @doc """
+  Returns the first (smallest) element in the bag. Raises `Enum.EmptyError` if the bag is empty.
+
+  ## Examples
+
+      iex> Xb5.Bag.first!(Xb5.Bag.new([1, 2, 3]))
+      1
+      iex> Xb5.Bag.first!(Xb5.Bag.new())
+      ** (Enum.EmptyError) empty error
+
+  """
+  @spec first!(t(value)) :: value
+  def first!(%__MODULE__{size: size, root: root}) do
+    if size === 0, do: raise(Enum.EmptyError), else: :xb5_bag_node.smallest(root)
+  end
+
+  @doc """
+  Returns the smallest element strictly greater than `element`, or `:error` if none exists.
+
+  ## Examples
+
+      iex> bag = Xb5.Bag.new([1, 2, 3])
+      iex> Xb5.Bag.higher(bag, 1)
+      {:ok, 2}
+      iex> Xb5.Bag.higher(bag, 3)
+      :error
+
+  """
+  @spec higher(t(value), value) :: {:ok, value} | :error
+  def higher(%__MODULE__{root: root}, element) do
+    case :xb5_bag_node.larger(element, root) do
+      {:found, e} -> {:ok, e}
+      :none -> :error
+    end
+  end
+
+  @doc """
   Returns the 0-based index of `value` in the bag, or `nil` if not present. Runs in O(log n) time.
 
   ## Examples
@@ -224,42 +280,58 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the smallest element strictly greater than `element`, or `:error` if none exists.
+  Returns the last (largest) element in the bag, or `default` if the bag is empty.
+
+  ## Examples
+
+      iex> Xb5.Bag.last(Xb5.Bag.new([1, 2, 3]))
+      3
+      iex> Xb5.Bag.last(Xb5.Bag.new())
+      nil
+      iex> Xb5.Bag.last(Xb5.Bag.new(), :empty)
+      :empty
+
+  """
+  @spec last(t(value), default) :: value | default when default: term()
+  def last(bag, default \\ nil)
+
+  def last(%__MODULE__{size: size, root: root}, default) do
+    if size === 0, do: default, else: :xb5_bag_node.largest(root)
+  end
+
+  @doc """
+  Returns the last (largest) element in the bag. Raises `Enum.EmptyError` if the bag is empty.
+
+  ## Examples
+
+      iex> Xb5.Bag.last!(Xb5.Bag.new([1, 2, 3]))
+      3
+      iex> Xb5.Bag.last!(Xb5.Bag.new())
+      ** (Enum.EmptyError) empty error
+
+  """
+  @spec last!(t(value)) :: value
+  def last!(%__MODULE__{size: size, root: root}) do
+    if size === 0, do: raise(Enum.EmptyError), else: :xb5_bag_node.largest(root)
+  end
+
+  @doc """
+  Returns the largest element strictly less than `element`, or `:error` if none exists.
 
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 2, 3])
-      iex> Xb5.Bag.larger(bag, 1)
+      iex> Xb5.Bag.lower(bag, 3)
       {:ok, 2}
-      iex> Xb5.Bag.larger(bag, 3)
+      iex> Xb5.Bag.lower(bag, 1)
       :error
 
   """
-  @spec larger(t(value), value) :: {:ok, value} | :error
-  def larger(%__MODULE__{root: root}, element) do
-    case :xb5_bag_node.larger(element, root) do
+  @spec lower(t(value), value) :: {:ok, value} | :error
+  def lower(%__MODULE__{root: root}, element) do
+    case :xb5_bag_node.smaller(element, root) do
       {:found, e} -> {:ok, e}
       :none -> :error
-    end
-  end
-
-  @doc """
-  Returns the largest element in the bag. Raises `ArgumentError` if the bag is empty.
-
-  ## Examples
-
-      iex> Xb5.Bag.largest!(Xb5.Bag.new([1, 2, 3]))
-      3
-      iex> Xb5.Bag.largest!(Xb5.Bag.new())
-      ** (ArgumentError) bag is empty
-
-  """
-  @spec largest!(t(value)) :: value
-  def largest!(%__MODULE__{size: size, root: root}) do
-    if size === 0 do
-      raise ArgumentError, "bag is empty"
-    else
-      :xb5_bag_node.largest(root)
     end
   end
 
@@ -460,48 +532,48 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Removes and returns the largest element. Raises `ArgumentError` if the bag is empty.
+  Removes and returns the first (smallest) element. Raises `Enum.EmptyError` if the bag is empty.
 
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 2, 3])
-      iex> Xb5.Bag.pop_largest!(bag)
-      {3, Xb5.Bag.new([1, 2])}
-      iex> Xb5.Bag.pop_largest!(Xb5.Bag.new())
-      ** (ArgumentError) bag is empty
+      iex> Xb5.Bag.pop_first!(bag)
+      {1, Xb5.Bag.new([2, 3])}
+      iex> Xb5.Bag.pop_first!(Xb5.Bag.new())
+      ** (Enum.EmptyError) empty error
 
   """
-  @spec pop_largest!(t(value)) :: {value, t(value)}
-  def pop_largest!(%__MODULE__{size: size, root: root} = set) do
+  @spec pop_first!(t(value)) :: {value, t(value)}
+  def pop_first!(%__MODULE__{size: size, root: root} = bag) do
     if size === 0 do
-      raise ArgumentError, "bag is empty"
+      raise Enum.EmptyError
     else
-      [value | root] = :xb5_bag_node.take_largest(root)
-      set = %{set | size: size - 1, root: root}
-      {value, set}
+      [value | root] = :xb5_bag_node.take_smallest(root)
+      bag = %{bag | size: size - 1, root: root}
+      {value, bag}
     end
   end
 
   @doc """
-  Removes and returns the smallest element. Raises `ArgumentError` if the bag is empty.
+  Removes and returns the last (largest) element. Raises `Enum.EmptyError` if the bag is empty.
 
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 2, 3])
-      iex> Xb5.Bag.pop_smallest!(bag)
-      {1, Xb5.Bag.new([2, 3])}
-      iex> Xb5.Bag.pop_smallest!(Xb5.Bag.new())
-      ** (ArgumentError) bag is empty
+      iex> Xb5.Bag.pop_last!(bag)
+      {3, Xb5.Bag.new([1, 2])}
+      iex> Xb5.Bag.pop_last!(Xb5.Bag.new())
+      ** (Enum.EmptyError) empty error
 
   """
-  @spec pop_smallest!(t(value)) :: {value, t(value)}
-  def pop_smallest!(%__MODULE__{size: size, root: root} = set) do
+  @spec pop_last!(t(value)) :: {value, t(value)}
+  def pop_last!(%__MODULE__{size: size, root: root} = bag) do
     if size === 0 do
-      raise ArgumentError, "bag is empty"
+      raise Enum.EmptyError
     else
-      [value | root] = :xb5_bag_node.take_smallest(root)
-      set = %{set | size: size - 1, root: root}
-      {value, set}
+      [value | root] = :xb5_bag_node.take_largest(root)
+      bag = %{bag | size: size - 1, root: root}
+      {value, bag}
     end
   end
 
@@ -517,7 +589,7 @@ defmodule Xb5.Bag do
       Xb5.Bag.new([1, 2, 3, 4])
 
   """
-  @spec(push(t(value), new_value) :: t(value | new_value) when new_value: value())
+  @spec push(t(value), new_value) :: t(value | new_value) when new_value: value()
   def push(%__MODULE__{size: size, root: root} = set, value) do
     root = :xb5_bag_node.push(value, root)
     %{set | size: size + 1, root: root}
@@ -535,7 +607,7 @@ defmodule Xb5.Bag do
       Xb5.Bag.new([1, 2, 3, 4])
 
   """
-  @spec(put(t(value), new_value) :: t(value | new_value) when new_value: value())
+  @spec put(t(value), new_value) :: t(value | new_value) when new_value: value()
   def put(%__MODULE__{size: size, root: root} = set, value) do
     case :xb5_bag_node.insert_att(value, root) do
       :key_exists ->
@@ -579,46 +651,6 @@ defmodule Xb5.Bag do
   @spec size(t()) :: non_neg_integer()
   def size(%__MODULE__{size: size}) do
     size
-  end
-
-  @doc """
-  Returns the largest element strictly less than `element`, or `:error` if none exists.
-
-  ## Examples
-
-      iex> bag = Xb5.Bag.new([1, 2, 3])
-      iex> Xb5.Bag.smaller(bag, 3)
-      {:ok, 2}
-      iex> Xb5.Bag.smaller(bag, 1)
-      :error
-
-  """
-  @spec smaller(t(value), value) :: {:ok, value} | :error
-  def smaller(%__MODULE__{root: root}, element) do
-    case :xb5_bag_node.smaller(element, root) do
-      {:found, e} -> {:ok, e}
-      :none -> :error
-    end
-  end
-
-  @doc """
-  Returns the smallest element in the bag. Raises `ArgumentError` if the bag is empty.
-
-  ## Examples
-
-      iex> Xb5.Bag.smallest!(Xb5.Bag.new([1, 2, 3]))
-      1
-      iex> Xb5.Bag.smallest!(Xb5.Bag.new())
-      ** (ArgumentError) bag is empty
-
-  """
-  @spec smallest!(t(value)) :: value
-  def smallest!(%__MODULE__{size: size, root: root}) do
-    if size === 0 do
-      raise ArgumentError, "bag is empty"
-    else
-      :xb5_bag_node.smallest(root)
-    end
   end
 
   @doc """

@@ -208,63 +208,91 @@ defmodule Xb5BagTest do
   end
 
   # ---------------------------------------------------------------------------
-  # Smaller and Larger
+  # first/last/lower/higher
   # ---------------------------------------------------------------------------
 
-  describe "smallest!" do
-    test "raises ArgumentError on empty bag, returns smallest element otherwise" do
+  describe "first" do
+    test "returns nil (or default) on empty bag, returns first element otherwise" do
       BTU.foreach_test_bag(fn
         0, _ref_elements, bag ->
-          assert_raise ArgumentError, fn -> Xb5.Bag.smallest!(bag) end
+          assert Xb5.Bag.first(bag) == nil
+          assert Xb5.Bag.first(bag, :empty) == :empty
 
         _size, ref_elements, bag ->
-          assert Xb5.Bag.smallest!(bag) == hd(ref_elements)
+          assert Xb5.Bag.first(bag) == hd(ref_elements)
+          assert Xb5.Bag.first(bag, :empty) == hd(ref_elements)
       end)
     end
   end
 
-  describe "largest!" do
-    test "raises ArgumentError on empty bag, returns largest element otherwise" do
+  describe "first!" do
+    test "raises Enum.EmptyError on empty bag, returns first element otherwise" do
       BTU.foreach_test_bag(fn
         0, _ref_elements, bag ->
-          assert_raise ArgumentError, fn -> Xb5.Bag.largest!(bag) end
+          assert_raise Enum.EmptyError, fn -> Xb5.Bag.first!(bag) end
 
         _size, ref_elements, bag ->
-          assert Xb5.Bag.largest!(bag) == List.last(ref_elements)
+          assert Xb5.Bag.first!(bag) == hd(ref_elements)
       end)
     end
   end
 
-  describe "smaller" do
+  describe "last" do
+    test "returns nil (or default) on empty bag, returns last element otherwise" do
+      BTU.foreach_test_bag(fn
+        0, _ref_elements, bag ->
+          assert Xb5.Bag.last(bag) == nil
+          assert Xb5.Bag.last(bag, :empty) == :empty
+
+        _size, ref_elements, bag ->
+          assert Xb5.Bag.last(bag) == List.last(ref_elements)
+          assert Xb5.Bag.last(bag, :empty) == List.last(ref_elements)
+      end)
+    end
+  end
+
+  describe "last!" do
+    test "raises Enum.EmptyError on empty bag, returns last element otherwise" do
+      BTU.foreach_test_bag(fn
+        0, _ref_elements, bag ->
+          assert_raise Enum.EmptyError, fn -> Xb5.Bag.last!(bag) end
+
+        _size, ref_elements, bag ->
+          assert Xb5.Bag.last!(bag) == List.last(ref_elements)
+      end)
+    end
+  end
+
+  describe "lower" do
     test "returns the largest element strictly less than the given element" do
       BTU.foreach_test_bag(fn _size, ref_elements, bag ->
         unique_ref = :lists.usort(ref_elements)
-        run_smaller(unique_ref, bag)
+        run_lower(unique_ref, bag)
       end)
     end
   end
 
-  describe "larger" do
+  describe "higher" do
     test "returns the smallest element strictly greater than the given element" do
       BTU.foreach_test_bag(fn _size, ref_elements, bag ->
         unique_ref = :lists.usort(ref_elements)
-        run_larger(unique_ref, bag)
+        run_higher(unique_ref, bag)
       end)
     end
   end
 
-  describe "pop_smallest!" do
-    test "raises ArgumentError on empty bag, pops elements in ascending order" do
+  describe "pop_first!" do
+    test "raises Enum.EmptyError on empty bag, pops elements in ascending order" do
       BTU.foreach_test_bag(fn _size, ref_elements, bag ->
-        run_pop_smallest(ref_elements, bag)
+        run_pop_first(ref_elements, bag)
       end)
     end
   end
 
-  describe "pop_largest!" do
-    test "raises ArgumentError on empty bag, pops elements in descending order" do
+  describe "pop_last!" do
+    test "raises Enum.EmptyError on empty bag, pops elements in descending order" do
       BTU.foreach_test_bag(fn _size, ref_elements, bag ->
-        run_pop_largest(:lists.reverse(ref_elements), bag)
+        run_pop_last(:lists.reverse(ref_elements), bag)
       end)
     end
   end
@@ -789,130 +817,130 @@ defmodule Xb5BagTest do
 
   defp check_delete_all_absent(_bag, _remaining, 0), do: :ok
 
-  defp run_smaller(unique_ref, bag) do
+  defp run_lower(unique_ref, bag) do
     case unique_ref do
       [] ->
         elem = TU.new_element()
-        assert Xb5.Bag.smaller(bag, elem) == :error
+        assert Xb5.Bag.lower(bag, elem) == :error
 
       [single] ->
-        assert Xb5.Bag.smaller(bag, TU.randomly_switch_number_type(single)) == :error
+        assert Xb5.Bag.lower(bag, TU.randomly_switch_number_type(single)) == :error
 
         larger = TU.element_larger(single)
-        assert Xb5.Bag.smaller(bag, larger) == {:ok, single}
+        assert Xb5.Bag.lower(bag, larger) == {:ok, single}
 
         smaller = TU.element_smaller(single)
-        assert Xb5.Bag.smaller(bag, smaller) == :error
+        assert Xb5.Bag.lower(bag, smaller) == :error
 
       [first | next] ->
-        assert Xb5.Bag.smaller(bag, TU.randomly_switch_number_type(first)) == :error
+        assert Xb5.Bag.lower(bag, TU.randomly_switch_number_type(first)) == :error
 
         smaller = TU.element_smaller(first)
-        assert Xb5.Bag.smaller(bag, smaller) == :error
+        assert Xb5.Bag.lower(bag, smaller) == :error
 
-        run_smaller_recur(first, next, bag)
+        run_lower_recur(first, next, bag)
     end
   end
 
-  defp run_smaller_recur(expected, [last], bag) do
+  defp run_lower_recur(expected, [last], bag) do
     assert canon_equal?(
              {:ok, expected},
-             Xb5.Bag.smaller(bag, TU.randomly_switch_number_type(last))
+             Xb5.Bag.lower(bag, TU.randomly_switch_number_type(last))
            )
 
     larger = TU.element_larger(last)
     assert larger > last
-    assert Xb5.Bag.smaller(bag, larger) == {:ok, last}
+    assert Xb5.Bag.lower(bag, larger) == {:ok, last}
   end
 
-  defp run_smaller_recur(expected, [elem | next], bag) do
-    assert Xb5.Bag.smaller(bag, TU.randomly_switch_number_type(elem)) == {:ok, expected}
+  defp run_lower_recur(expected, [elem | next], bag) do
+    assert Xb5.Bag.lower(bag, TU.randomly_switch_number_type(elem)) == {:ok, expected}
 
     case TU.element_in_between(expected, elem) do
       {:found, in_between} ->
         assert in_between > expected
         assert in_between < elem
-        assert Xb5.Bag.smaller(bag, in_between) == {:ok, expected}
+        assert Xb5.Bag.lower(bag, in_between) == {:ok, expected}
 
       :none ->
         :ok
     end
 
-    run_smaller_recur(elem, next, bag)
+    run_lower_recur(elem, next, bag)
   end
 
-  defp run_larger(unique_ref, bag) do
+  defp run_higher(unique_ref, bag) do
     case :lists.reverse(unique_ref) do
       [] ->
         elem = TU.new_element()
-        assert Xb5.Bag.larger(bag, elem) == :error
+        assert Xb5.Bag.higher(bag, elem) == :error
 
       [single] ->
-        assert Xb5.Bag.larger(bag, single) == :error
+        assert Xb5.Bag.higher(bag, single) == :error
 
         larger = TU.element_larger(single)
-        assert Xb5.Bag.larger(bag, larger) == :error
+        assert Xb5.Bag.higher(bag, larger) == :error
 
         smaller = TU.element_smaller(single)
-        assert Xb5.Bag.larger(bag, smaller) == {:ok, single}
+        assert Xb5.Bag.higher(bag, smaller) == {:ok, single}
 
       [last | next] ->
-        assert Xb5.Bag.larger(bag, TU.randomly_switch_number_type(last)) == :error
+        assert Xb5.Bag.higher(bag, TU.randomly_switch_number_type(last)) == :error
 
         larger = TU.element_larger(last)
-        assert Xb5.Bag.larger(bag, larger) == :error
+        assert Xb5.Bag.higher(bag, larger) == :error
 
-        run_larger_recur(last, next, bag)
+        run_higher_recur(last, next, bag)
     end
   end
 
-  defp run_larger_recur(expected, [first], bag) do
+  defp run_higher_recur(expected, [first], bag) do
     assert canon_equal?(
              {:ok, expected},
-             Xb5.Bag.larger(bag, TU.randomly_switch_number_type(first))
+             Xb5.Bag.higher(bag, TU.randomly_switch_number_type(first))
            )
 
     smaller = TU.element_smaller(first)
     assert smaller < first
-    assert Xb5.Bag.larger(bag, smaller) == {:ok, first}
+    assert Xb5.Bag.higher(bag, smaller) == {:ok, first}
   end
 
-  defp run_larger_recur(expected, [elem | next], bag) do
-    assert Xb5.Bag.larger(bag, TU.randomly_switch_number_type(elem)) == {:ok, expected}
+  defp run_higher_recur(expected, [elem | next], bag) do
+    assert Xb5.Bag.higher(bag, TU.randomly_switch_number_type(elem)) == {:ok, expected}
 
     case TU.element_in_between(elem, expected) do
       {:found, in_between} ->
         assert in_between < expected
         assert in_between > elem
-        assert Xb5.Bag.larger(bag, in_between) == {:ok, expected}
+        assert Xb5.Bag.higher(bag, in_between) == {:ok, expected}
 
       :none ->
         :ok
     end
 
-    run_larger_recur(elem, next, bag)
+    run_higher_recur(elem, next, bag)
   end
 
-  defp run_pop_smallest([expected | next], bag) do
-    {taken, bag2} = Xb5.Bag.pop_smallest!(bag)
+  defp run_pop_first([expected | next], bag) do
+    {taken, bag2} = Xb5.Bag.pop_first!(bag)
     assert taken == expected
     assert Xb5.Bag.size(bag2) == length(next)
-    run_pop_smallest(next, bag2)
+    run_pop_first(next, bag2)
   end
 
-  defp run_pop_smallest([], bag) do
-    assert_raise ArgumentError, fn -> Xb5.Bag.pop_smallest!(bag) end
+  defp run_pop_first([], bag) do
+    assert_raise Enum.EmptyError, fn -> Xb5.Bag.pop_first!(bag) end
   end
 
-  defp run_pop_largest([expected | next], bag) do
-    {taken, bag2} = Xb5.Bag.pop_largest!(bag)
+  defp run_pop_last([expected | next], bag) do
+    {taken, bag2} = Xb5.Bag.pop_last!(bag)
     assert taken == expected
     assert Xb5.Bag.size(bag2) == length(next)
-    run_pop_largest(next, bag2)
+    run_pop_last(next, bag2)
   end
 
-  defp run_pop_largest([], bag) do
-    assert_raise ArgumentError, fn -> Xb5.Bag.pop_largest!(bag) end
+  defp run_pop_last([], bag) do
+    assert_raise Enum.EmptyError, fn -> Xb5.Bag.pop_last!(bag) end
   end
 
   defp run_count(ref_elements, bag) do
