@@ -1309,8 +1309,7 @@ defmodule Xb5.Tree do
     ##
 
     defp member_get_found(tree_key, tree_value, queried_key, queried_value) do
-      # FIXME is this consistent with non-strict comparisons elsewhere?
-      tree_key === queried_key and tree_value === queried_value
+      tree_key == queried_key and tree_value === queried_value
     end
 
     defp member_get_not_found(_key) do

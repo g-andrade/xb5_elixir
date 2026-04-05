@@ -1,5 +1,6 @@
 defmodule Xb5SetTest do
   use ExUnit.Case, async: true
+  @moduletag :set
 
   alias Xb5TestUtils, as: TU
   alias Xb5SetTestUtils, as: STU

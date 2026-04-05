@@ -1,5 +1,7 @@
 defmodule Xb5TreeTest do
   use ExUnit.Case, async: true
+  @moduletag :tree
+
   alias Xb5TreeTestUtils, as: TTU
   alias Xb5TestUtils, as: TU
 
@@ -1017,13 +1019,20 @@ defmodule Xb5TreeTest do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
         assert Enum.count(tree) == size
 
-        # member? uses === internally; test with exact stored pairs (no key-type switching)
         ref_kvs
         |> TU.list_shuffle()
         |> Enum.take(min(5, size))
-        |> Enum.each(fn {k, _} = pair ->
-          assert Enum.member?(tree, pair)
+        |> Enum.each(fn {k, v} ->
+          assert Enum.member?(tree, {TU.randomly_switch_number_type(k), v})
           refute Enum.member?(tree, {k, make_ref()})
+
+          switched_v = TU.randomly_switch_number_type(v)
+
+          if switched_v == v do
+            assert Enum.member?(tree, {k, switched_v})
+          else
+            refute Enum.member?(tree, {k, switched_v})
+          end
         end)
 
         foreach_non_existent_key(

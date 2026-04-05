@@ -1,5 +1,7 @@
 defmodule Xb5BagTest do
   use ExUnit.Case, async: true
+  @moduletag :bag
+
   alias Xb5BagTestUtils, as: BTU
   alias Xb5TestUtils, as: TU
 
