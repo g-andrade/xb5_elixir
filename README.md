@@ -170,13 +170,13 @@ This differs from `MapSet`, which uses strict `===` comparison.
 The Elixir structs and the Erlang `xb5` opaque records are two different packages around
 the same content: a `size` integer and a `root` node term. `new/1` extracts that content
 from an Erlang record via `:xb5_*.unwrap/1` (which does a quick read-only validation pass);
-`unwrap/1` hands it back as `%{size: n, root: node}`. No tree data is duplicated.
+`unwrap!/1` hands it back as `%{size: n, root: node}`. No tree data is duplicated.
 
 ```elixir
 iex> erlang_set = :xb5_sets.from_list([1, 2, 3])
 iex> elixir_set = Xb5.Set.new(erlang_set)
 Xb5.Set.new([1, 2, 3])
-iex> Xb5.Set.unwrap(elixir_set).size
+iex> Xb5.Set.unwrap!(elixir_set).size
 3
 ```
 

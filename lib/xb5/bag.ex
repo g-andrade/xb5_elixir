@@ -27,7 +27,7 @@ defmodule Xb5.Bag do
   ## Erlang interop
 
   `Xb5.Bag` is compatible with the Erlang `:xb5_bag` module. Build one from an `:xb5_bag`
-  term via `new/1`. To go the other way, call `unwrap/1` to extract the size and root node,
+  term via `new/1`. To go the other way, call `unwrap!/1` to extract the size and root node,
   then pass the result to `:xb5_bag.wrap/1`.
 
   ## Examples
@@ -297,7 +297,7 @@ defmodule Xb5.Bag do
       Xb5.Bag.new([3, :a, :b, :b])
 
   """
-  @spec new(:xb5_bag.t(val) | Enumerable.t()) :: t(val) when val: value()
+  @spec new(:xb5_bag.bag(val) | Enumerable.t()) :: t(val) when val: value()
   def new(input) do
     case :xb5_bag.unwrap(input) do
       {:ok, %{size: size, root: root}} ->
@@ -320,7 +320,7 @@ defmodule Xb5.Bag do
       Xb5.Bag.new([2, 2, 4])
 
   """
-  @spec new(:xb5_bag.t() | Enumerable.t(), (term() -> val)) :: t(val) when val: value()
+  @spec new(:xb5_bag.bag() | Enumerable.t(), (term() -> val)) :: t(val) when val: value()
   def new(input, transform) do
     case :xb5_bag.unwrap(input) do
       {:ok, %{root: root}} ->
@@ -604,13 +604,13 @@ defmodule Xb5.Bag do
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 1, 2, 3])
-      iex> %{size: size} = Xb5.Bag.unwrap(bag)
+      iex> %{size: size} = Xb5.Bag.unwrap!(bag)
       iex> size
       4
 
   """
-  @spec unwrap(t(val)) :: :xb5_bag.unwrapped_bag(val) when val: value()
-  def unwrap(%__MODULE__{size: size, root: root}) do
+  @spec unwrap!(t(val)) :: :xb5_bag.unwrapped_bag(val) when val: value()
+  def unwrap!(%__MODULE__{size: size, root: root}) do
     %{size: size, root: root}
   end
 

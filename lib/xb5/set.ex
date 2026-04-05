@@ -21,7 +21,7 @@ defmodule Xb5.Set do
   ## Erlang interop
 
   `Xb5.Set` is compatible with the Erlang `:xb5_sets` module. Build one from an
-  `:xb5_sets` term via `new/1`. To go the other way, call `unwrap/1` to extract the
+  `:xb5_sets` term via `new/1`. To go the other way, call `unwrap!/1` to extract the
   size and root node, then pass the result to `:xb5_sets.wrap/1`.
 
   ## Examples
@@ -562,13 +562,13 @@ defmodule Xb5.Set do
 
   ## Examples
 
-      iex> %{size: size} = Xb5.Set.unwrap(Xb5.Set.new([1, 2, 3]))
+      iex> %{size: size} = Xb5.Set.unwrap!(Xb5.Set.new([1, 2, 3]))
       iex> size
       3
 
   """
-  @spec unwrap(t(val)) :: :xb5_sets.unwrapped_set(val) when val: value()
-  def unwrap(%__MODULE__{size: size, root: root}) do
+  @spec unwrap!(t(val)) :: :xb5_sets.unwrapped_set(val) when val: value()
+  def unwrap!(%__MODULE__{size: size, root: root}) do
     %{size: size, root: root}
   end
 

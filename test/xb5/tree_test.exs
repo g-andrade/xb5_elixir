@@ -457,9 +457,9 @@ defmodule Xb5TreeTest do
   end
 
   describe "rewrap" do
-    test "round-trips through Erlang xb5_trees wrap/unwrap" do
+    test "round-trips through Erlang xb5_trees wrap/unwrap!" do
       TTU.foreach_test_tree(fn _size, _ref_kvs, tree ->
-        unwrapped = Xb5.Tree.unwrap(tree)
+        unwrapped = Xb5.Tree.unwrap!(tree)
         erlang_term = :xb5_trees.wrap(unwrapped)
         rewrapped = Xb5.Tree.new(erlang_term)
         assert rewrapped == tree
@@ -1004,7 +1004,7 @@ defmodule Xb5TreeTest do
 
     test "new/2 with Erlang term and transform" do
       base = Xb5.Tree.new([{1, :a}, {2, :b}])
-      erlang_term = :xb5_trees.wrap(Xb5.Tree.unwrap(base))
+      erlang_term = :xb5_trees.wrap(Xb5.Tree.unwrap!(base))
       tree = Xb5.Tree.new(erlang_term, fn {k, v} -> {k, {v, k}} end)
       assert Xb5.Tree.to_list(tree) == [{1, {:a, 1}}, {2, {:b, 2}}]
     end

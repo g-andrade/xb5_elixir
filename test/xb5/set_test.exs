@@ -421,7 +421,7 @@ defmodule Xb5SetTest do
   end
 
   describe "new/1 with native Erlang xb5_sets term" do
-    test "round-trips through :xb5_sets.wrap/unwrap" do
+    test "round-trips through :xb5_sets.wrap/unwrap!" do
       assert {:error, _} = :xb5_sets.unwrap(:xb5_bag.new())
       assert {:error, _} = :xb5_sets.unwrap(:xb5_trees.new())
       assert {:error, _} = :xb5_sets.unwrap({:xb5_set, -1, :xb5_sets_node.new()})
@@ -652,7 +652,7 @@ defmodule Xb5SetTest do
 
     test "new/2 with Erlang term and transform" do
       base = Xb5.Set.new([1, 2, 3])
-      erlang_set = :xb5_sets.wrap(Xb5.Set.unwrap(base))
+      erlang_set = :xb5_sets.wrap(Xb5.Set.unwrap!(base))
       set = Xb5.Set.new(erlang_set, fn x -> x * 2 end)
       assert Xb5.Set.to_list(set) == [2, 4, 6]
     end

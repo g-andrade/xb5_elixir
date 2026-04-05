@@ -713,13 +713,13 @@ defmodule Xb5BagTest do
   end
 
   describe "rewrap" do
-    test "round-trips through unwrap/wrap and rejects invalid inputs" do
+    test "round-trips through unwrap!/wrap and rejects invalid inputs" do
       # Invalid inputs
-      assert match?({:error, _}, :xb5_bag.unwrap(Xb5.Set.new() |> Xb5.Set.unwrap()))
-      assert match?({:error, _}, :xb5_bag.unwrap(Xb5.Tree.new() |> Xb5.Tree.unwrap()))
+      assert match?({:error, _}, :xb5_bag.unwrap(Xb5.Set.new() |> Xb5.Set.unwrap!()))
+      assert match?({:error, _}, :xb5_bag.unwrap(Xb5.Tree.new() |> Xb5.Tree.unwrap!()))
 
       BTU.foreach_test_bag(fn _size, _ref_elements, bag ->
-        unwrapped = Xb5.Bag.unwrap(bag)
+        unwrapped = Xb5.Bag.unwrap!(bag)
         erlang_bag = :xb5_bag.wrap(unwrapped)
         rewrapped = Xb5.Bag.new(erlang_bag)
         assert Xb5.Bag.to_list(rewrapped) == Xb5.Bag.to_list(bag)
@@ -1354,7 +1354,7 @@ defmodule Xb5BagTest do
 
     test "new/2 with Erlang bag term and transform" do
       base = Xb5.Bag.new([1, 2, 3])
-      erlang_bag = :xb5_bag.wrap(Xb5.Bag.unwrap(base))
+      erlang_bag = :xb5_bag.wrap(Xb5.Bag.unwrap!(base))
       bag = Xb5.Bag.new(erlang_bag, fn x -> x * 2 end)
       assert Xb5.Bag.to_list(bag) == [2, 4, 6]
     end

@@ -21,7 +21,7 @@ defmodule Xb5.Tree do
   ## Erlang interop
 
   `Xb5.Tree` is compatible with the Erlang `:xb5_trees` module. Build one from an
-  `:xb5_trees` term via `new/1`. To go the other way, call `unwrap/1` to extract the
+  `:xb5_trees` term via `new/1`. To go the other way, call `unwrap!/1` to extract the
   size and root node, then pass the result to `:xb5_trees.wrap/1`.
 
   ## Examples
@@ -149,7 +149,12 @@ defmodule Xb5.Tree do
   """
   @spec fetch!(t(), key()) :: value()
   def fetch!(%__MODULE__{root: root} = tree, key) do
-    :xb5_trees_node.get_att(key, root, &fetch_bang_found/2, &fetch_bang_not_found(tree, &1))
+    try do
+      :xb5_trees_node.get_att(key, root, &fetch_bang_found/2, &fetch_bang_not_found/1)
+    catch
+      :error, %KeyError{} = reason ->
+        raise %{reason | term: tree}
+    end
   end
 
   @doc """
@@ -317,19 +322,24 @@ defmodule Xb5.Tree do
           {current_value, t()}
         when current_value: value()
   def get_and_update!(%__MODULE__{root: root} = tree, key, fun) do
-    value =
-      :xb5_trees_node.get_att(key, root, &fetch_bang_found/2, &fetch_bang_not_found(tree, &1))
+    try do
+      :xb5_trees_node.get_att(key, root, &fetch_bang_found/2, &fetch_bang_not_found/1)
+    catch
+      :error, %KeyError{} = reason ->
+        raise %{reason | term: tree}
+    else
+      value ->
+        case fun.(value) do
+          {current_value, new_value} ->
+            root = :xb5_trees_node.update_att(key, :eager, new_value, root)
+            tree = %{tree | root: root}
+            {current_value, tree}
 
-    case fun.(value) do
-      {current_value, new_value} ->
-        root = :xb5_trees_node.update_att(key, :eager, new_value, root)
-        tree = %{tree | root: root}
-        {current_value, tree}
-
-      :pop ->
-        root = :xb5_trees_node.delete_att(key, root)
-        tree = %{tree | size: tree.size - 1, root: root}
-        {value, tree}
+          :pop ->
+            root = :xb5_trees_node.delete_att(key, root)
+            tree = %{tree | size: tree.size - 1, root: root}
+            {value, tree}
+        end
     end
   end
 
@@ -560,7 +570,7 @@ defmodule Xb5.Tree do
       Xb5.Tree.new([a: 3])
 
   """
-  @spec new(:xb5_trees.t(key, value) | Enumerable.t()) :: t(key, value)
+  @spec new(:xb5_trees.tree(key, value) | Enumerable.t()) :: t(key, value)
   def new(input) do
     case :xb5_trees.unwrap(input) do
       {:ok, %{size: size, root: root}} ->
@@ -586,7 +596,7 @@ defmodule Xb5.Tree do
       Xb5.Tree.new([a: :a, b: :b])
 
   """
-  @spec new(:xb5_trees.t() | Enumerable.t(), (term() -> value)) :: t(key, value)
+  @spec new(:xb5_trees.tree() | Enumerable.t(), (term() -> value)) :: t(key, value)
   def new(input, transform) do
     case :xb5_trees.unwrap(input) do
       {:ok, %{root: root}} ->
@@ -626,7 +636,7 @@ defmodule Xb5.Tree do
 
   def pop(%__MODULE__{size: size, root: root} = tree, key, default) do
     case :xb5_trees_node.take_att(key, root) do
-      [[_ | value] | root] ->
+      [value | root] ->
         tree = %{tree | size: size - 1, root: root}
         {value, tree}
 
@@ -656,7 +666,7 @@ defmodule Xb5.Tree do
   @spec pop!(t(), key()) :: {value(), updated_map :: t()}
   def pop!(%__MODULE__{size: size, root: root} = tree, key) do
     case :xb5_trees_node.take_att(key, root) do
-      [[_ | value] | root] ->
+      [value | root] ->
         tree = %{tree | size: size - 1, root: root}
         {value, tree}
 
@@ -716,7 +726,7 @@ defmodule Xb5.Tree do
   @spec pop_lazy(t(), key(), (-> value())) :: {value(), t()}
   def pop_lazy(%__MODULE__{size: size, root: root} = tree, key, fun) do
     case :xb5_trees_node.take_att(key, root) do
-      [[_ | value] | root] ->
+      [value | root] ->
         tree = %{tree | size: size - 1, root: root}
         {value, tree}
 
@@ -1141,13 +1151,13 @@ defmodule Xb5.Tree do
 
   ## Examples
 
-      iex> %{size: size} = Xb5.Tree.unwrap(Xb5.Tree.new([a: 1, b: 2, c: 3]))
+      iex> %{size: size} = Xb5.Tree.unwrap!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
       iex> size
       3
 
   """
-  @spec unwrap(t(key, value)) :: :xb5_trees.unwrapped_tree(key, value)
-  def unwrap(%__MODULE__{size: size, root: root}) do
+  @spec unwrap!(t(key, value)) :: :xb5_trees.unwrapped_tree(key, value)
+  def unwrap!(%__MODULE__{size: size, root: root}) do
     %{size: size, root: root}
   end
 
@@ -1203,7 +1213,7 @@ defmodule Xb5.Tree do
   ##
 
   defp fetch_bang_found(_key, value), do: value
-  defp fetch_bang_not_found(tree, key), do: raise(KeyError, term: tree, key: key)
+  defp fetch_bang_not_found(key), do: raise(KeyError, key: key)
 
   ##
 
