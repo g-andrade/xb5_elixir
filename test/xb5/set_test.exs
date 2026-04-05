@@ -660,6 +660,111 @@ defmodule Xb5SetTest do
     end
   end
 
+  # ---------------------------------------------------------------------------
+  # Stream API
+  # ---------------------------------------------------------------------------
+
+  describe "stream" do
+    test "asc matches to_list" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        result = Xb5.Set.stream(set) |> Enum.to_list()
+        assert canon_elems(result) == canon_elems(ref_elements)
+        assert length(result) == size
+      end)
+    end
+
+    test "desc matches desc to_list" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        result = Xb5.Set.stream(set, :desc) |> Enum.to_list()
+        assert canon_elems(result) == canon_elems(Enum.reverse(ref_elements))
+        assert length(result) == size
+      end)
+    end
+
+    test "partial consumption via Enum.take" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        if size >= 2 do
+          take = div(size, 2)
+          result = Xb5.Set.stream(set) |> Enum.take(take)
+          assert canon_elems(result) == canon_elems(Enum.take(ref_elements, take))
+        end
+      end)
+    end
+  end
+
+  describe "stream_from" do
+    test "asc: multiple sampled existing elements as start points" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        if size > 0 do
+          ref_elements
+          |> TU.list_shuffle()
+          |> Enum.take(10)
+          |> Enum.each(fn start_elem ->
+            result = Xb5.Set.stream_from(set, start_elem) |> Enum.to_list()
+            expected = Enum.drop_while(ref_elements, fn e -> e < start_elem end)
+            assert canon_elems(result) == canon_elems(expected)
+          end)
+        end
+      end)
+    end
+
+    test "asc: starting below all elements yields full stream" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        if size > 0 do
+          before_all = TU.element_smaller(hd(ref_elements))
+          result = Xb5.Set.stream_from(set, before_all) |> Enum.to_list()
+          assert canon_elems(result) == canon_elems(ref_elements)
+        end
+      end)
+    end
+
+    test "asc: starting above all elements yields empty stream" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        if size > 0 do
+          after_all = TU.element_larger(List.last(ref_elements))
+          assert Xb5.Set.stream_from(set, after_all) |> Enum.to_list() == []
+        end
+      end)
+    end
+
+    test "desc: multiple sampled existing elements as start points" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        if size > 0 do
+          ref_elements
+          |> TU.list_shuffle()
+          |> Enum.take(10)
+          |> Enum.each(fn start_elem ->
+            result = Xb5.Set.stream_from(set, start_elem, :desc) |> Enum.to_list()
+
+            expected =
+              ref_elements |> Enum.take_while(fn e -> e <= start_elem end) |> Enum.reverse()
+
+            assert canon_elems(result) == canon_elems(expected)
+          end)
+        end
+      end)
+    end
+
+    test "desc: starting above all elements yields full desc stream" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        if size > 0 do
+          after_all = TU.element_larger(List.last(ref_elements))
+          result = Xb5.Set.stream_from(set, after_all, :desc) |> Enum.to_list()
+          assert canon_elems(result) == canon_elems(Enum.reverse(ref_elements))
+        end
+      end)
+    end
+
+    test "desc: starting below all elements yields empty stream" do
+      STU.foreach_test_set(fn size, ref_elements, set ->
+        if size > 0 do
+          before_all = TU.element_smaller(hd(ref_elements))
+          assert Xb5.Set.stream_from(set, before_all, :desc) |> Enum.to_list() == []
+        end
+      end)
+    end
+  end
+
   describe "Enumerable protocol" do
     test "count, member?, reduce, and slice" do
       STU.foreach_test_set(fn size, ref_elements, set ->

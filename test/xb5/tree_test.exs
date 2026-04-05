@@ -1015,6 +1015,115 @@ defmodule Xb5TreeTest do
   end
 
   # ---------------------------------------------------------------------------
+  # Stream API
+  # ---------------------------------------------------------------------------
+
+  describe "stream" do
+    test "asc matches to_list" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        result = Xb5.Tree.stream(tree) |> Enum.to_list()
+        assert TTU.canon_kvs(result) == TTU.canon_kvs(ref_kvs)
+        assert length(result) == size
+      end)
+    end
+
+    test "desc matches desc to_list" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        result = Xb5.Tree.stream(tree, :desc) |> Enum.to_list()
+        assert TTU.canon_kvs(result) == TTU.canon_kvs(Enum.reverse(ref_kvs))
+        assert length(result) == size
+      end)
+    end
+
+    test "partial consumption via Enum.take" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size >= 2 do
+          take = div(size, 2)
+          result = Xb5.Tree.stream(tree) |> Enum.take(take)
+          assert TTU.canon_kvs(result) == TTU.canon_kvs(Enum.take(ref_kvs, take))
+        end
+      end)
+    end
+  end
+
+  describe "stream_from" do
+    test "asc: multiple sampled existing keys as start points" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size > 0 do
+          ref_kvs
+          |> TU.list_shuffle()
+          |> Enum.take(10)
+          |> Enum.each(fn {start_key, _} ->
+            result = Xb5.Tree.stream_from(tree, start_key) |> Enum.to_list()
+            expected = Enum.drop_while(ref_kvs, fn {k, _} -> k < start_key end)
+            assert TTU.canon_kvs(result) == TTU.canon_kvs(expected)
+          end)
+        end
+      end)
+    end
+
+    test "asc: starting below all keys yields full stream" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size > 0 do
+          {first_key, _} = hd(ref_kvs)
+          before_all = TU.element_smaller(first_key)
+          result = Xb5.Tree.stream_from(tree, before_all) |> Enum.to_list()
+          assert TTU.canon_kvs(result) == TTU.canon_kvs(ref_kvs)
+        end
+      end)
+    end
+
+    test "asc: starting above all keys yields empty stream" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size > 0 do
+          {last_key, _} = List.last(ref_kvs)
+          after_all = TU.element_larger(last_key)
+          assert Xb5.Tree.stream_from(tree, after_all) |> Enum.to_list() == []
+        end
+      end)
+    end
+
+    test "desc: multiple sampled existing keys as start points" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size > 0 do
+          ref_kvs
+          |> TU.list_shuffle()
+          |> Enum.take(10)
+          |> Enum.each(fn {start_key, _} ->
+            result = Xb5.Tree.stream_from(tree, start_key, :desc) |> Enum.to_list()
+
+            expected =
+              ref_kvs |> Enum.take_while(fn {k, _} -> k <= start_key end) |> Enum.reverse()
+
+            assert TTU.canon_kvs(result) == TTU.canon_kvs(expected)
+          end)
+        end
+      end)
+    end
+
+    test "desc: starting above all keys yields full desc stream" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size > 0 do
+          {last_key, _} = List.last(ref_kvs)
+          after_all = TU.element_larger(last_key)
+          result = Xb5.Tree.stream_from(tree, after_all, :desc) |> Enum.to_list()
+          assert TTU.canon_kvs(result) == TTU.canon_kvs(Enum.reverse(ref_kvs))
+        end
+      end)
+    end
+
+    test "desc: starting below all keys yields empty stream" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size > 0 do
+          {first_key, _} = hd(ref_kvs)
+          before_all = TU.element_smaller(first_key)
+          assert Xb5.Tree.stream_from(tree, before_all, :desc) |> Enum.to_list() == []
+        end
+      end)
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # Protocol coverage
   # ---------------------------------------------------------------------------
 

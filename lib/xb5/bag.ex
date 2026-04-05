@@ -48,6 +48,7 @@ defmodule Xb5.Bag do
 
   @type t(value) :: %__MODULE__{size: non_neg_integer(), root: :xb5_bag_node.t(value)}
   @type t :: t(value)
+  @type order :: :asc | :desc
   @type value :: term
 
   ## API
@@ -621,6 +622,106 @@ defmodule Xb5.Bag do
   end
 
   @doc """
+  Returns a lazy stream over all elements of `bag`.
+
+  `order` controls traversal direction: `:asc` (ascending, the default) or
+  `:desc` (descending).
+
+  ## Examples
+
+      iex> bag = Xb5.Bag.new([1, 2, 3])
+      iex> Xb5.Bag.stream(bag) |> Enum.to_list()
+      [1, 2, 3]
+      iex> Xb5.Bag.stream(bag, :desc) |> Enum.to_list()
+      [3, 2, 1]
+      iex> Xb5.Bag.stream(Xb5.Bag.new()) |> Enum.to_list()
+      []
+
+  """
+  @spec stream(t(val), order) :: Enumerable.t() when val: value()
+  def stream(bag, order \\ :asc)
+
+  def stream(%__MODULE__{root: root}, order) do
+    erl_iterator_order = erl_iterator_order(order)
+
+    Stream.resource(
+      fn -> :xb5_bag_node.iterator(root, erl_iterator_order) end,
+      &stream_next/1,
+      &stream_after/1
+    )
+  end
+
+  @doc """
+  Returns a lazy stream over elements of `bag` starting from `element`.
+
+  For `:asc` (the default), starts at the first element greater than or
+  equal to `element`. For `:desc`, starts at the first element less than or
+  equal to `element`. Returns an empty stream if no such element exists.
+
+  ## Examples
+
+      iex> bag = Xb5.Bag.new([1, 2, 3, 4, 5])
+      iex> Xb5.Bag.stream_from(bag, 3) |> Enum.to_list()
+      [3, 4, 5]
+      iex> Xb5.Bag.stream_from(bag, 3, :desc) |> Enum.to_list()
+      [3, 2, 1]
+      iex> Xb5.Bag.stream_from(bag, 6) |> Enum.to_list()
+      []
+
+  """
+  @spec stream_from(t(val), val, order) :: Enumerable.t() when val: value()
+  def stream_from(bag, value, order \\ :asc)
+
+  def stream_from(%__MODULE__{root: root}, value, order) do
+    erl_iterator_order = erl_iterator_order(order)
+
+    Stream.resource(
+      fn -> :xb5_bag_node.iterator_from(value, root, erl_iterator_order) end,
+      &stream_next/1,
+      &stream_after/1
+    )
+  end
+
+  @doc """
+  Returns a lazy stream over elements of `bag` starting from `index` (0-based),
+  always in ascending order.
+
+  A negative `index` counts from the end: `-1` starts at the last element.
+  Returns an empty stream if `index` is out of bounds.
+
+  ## Examples
+
+      iex> bag = Xb5.Bag.new([1, 2, 3, 4, 5])
+      iex> Xb5.Bag.stream_from_index(bag, 2) |> Enum.to_list()
+      [3, 4, 5]
+      iex> Xb5.Bag.stream_from_index(bag, -2) |> Enum.to_list()
+      [4, 5]
+      iex> Xb5.Bag.stream_from_index(bag, 10) |> Enum.to_list()
+      []
+
+  """
+  @spec stream_from_index(t(val), integer) :: Enumerable.t() when val: value()
+  def stream_from_index(%__MODULE__{root: root, size: size}, index) when is_integer(index) do
+    resolved_index = resolve_index(size, index)
+
+    if resolved_index < 0 or resolved_index >= size do
+      Stream.resource(
+        fn -> :ok end,
+        fn iter -> {:halt, iter} end,
+        fn _iter -> :ok end
+      )
+    else
+      rank = resolved_index + 1
+
+      Stream.resource(
+        fn -> :xb5_bag_node.iterator_from_nth(rank, size, root, :ordered) end,
+        &stream_next/1,
+        &stream_after/1
+      )
+    end
+  end
+
+  @doc """
   Returns structural statistics about the underlying B-tree.
 
   Useful for inspecting tree balance and node utilization.
@@ -727,6 +828,25 @@ defmodule Xb5.Bag do
     else
       index
     end
+  end
+
+  ##
+
+  defp erl_iterator_order(:asc), do: :ordered
+  defp erl_iterator_order(:desc), do: :reversed
+
+  defp stream_next(iter) do
+    case :xb5_bag_node.next(iter) do
+      {value, iter} ->
+        {[value], iter}
+
+      :none ->
+        {:halt, iter}
+    end
+  end
+
+  defp stream_after(_iter) do
+    :ok
   end
 
   ## Protocols - Enumerable

@@ -42,6 +42,7 @@ defmodule Xb5.Set do
 
   @type t(value) :: %__MODULE__{size: non_neg_integer(), root: :xb5_sets_node.t(value)}
   @type t :: t(value)
+  @type order :: :asc | :desc
   @type value :: term
 
   ## API
@@ -491,6 +492,67 @@ defmodule Xb5.Set do
   end
 
   @doc """
+  Returns a lazy stream over all elements of `set`.
+
+  `order` controls traversal direction: `:asc` (ascending, the default) or
+  `:desc` (descending).
+
+  ## Examples
+
+      iex> set = Xb5.Set.new([1, 2, 3])
+      iex> Xb5.Set.stream(set) |> Enum.to_list()
+      [1, 2, 3]
+      iex> Xb5.Set.stream(set, :desc) |> Enum.to_list()
+      [3, 2, 1]
+      iex> Xb5.Set.stream(Xb5.Set.new()) |> Enum.to_list()
+      []
+
+  """
+  @spec stream(t(val), order) :: Enumerable.t() when val: value()
+  def stream(set, order \\ :asc)
+
+  def stream(%__MODULE__{root: root}, order) do
+    erl_iterator_order = erl_iterator_order(order)
+
+    Stream.resource(
+      fn -> :xb5_sets_node.iterator(root, erl_iterator_order) end,
+      &stream_next/1,
+      &stream_after/1
+    )
+  end
+
+  @doc """
+  Returns a lazy stream over elements of `set` starting from `element`.
+
+  For `:asc` (the default), starts at the first element greater than or
+  equal to `element`. For `:desc`, starts at the first element less than or
+  equal to `element`. Returns an empty stream if no such element exists.
+
+  ## Examples
+
+      iex> set = Xb5.Set.new([1, 2, 3, 4, 5])
+      iex> Xb5.Set.stream_from(set, 3) |> Enum.to_list()
+      [3, 4, 5]
+      iex> Xb5.Set.stream_from(set, 3, :desc) |> Enum.to_list()
+      [3, 2, 1]
+      iex> Xb5.Set.stream_from(set, 6) |> Enum.to_list()
+      []
+
+  """
+  @spec stream_from(t(val), val, order) :: Enumerable.t() when val: value()
+  def stream_from(set, value, order \\ :asc)
+
+  def stream_from(%__MODULE__{root: root}, value, order) do
+    erl_iterator_order = erl_iterator_order(order)
+
+    Stream.resource(
+      fn -> :xb5_sets_node.iterator_from(value, root, erl_iterator_order) end,
+      &stream_next/1,
+      &stream_after/1
+    )
+  end
+
+  @doc """
   Returns structural statistics about the underlying B-tree.
 
   Useful for inspecting tree balance and node utilization.
@@ -632,6 +694,25 @@ defmodule Xb5.Set do
   defp from_ordset(size, ordset) do
     root = :xb5_sets_node.from_ordset(size, ordset)
     %__MODULE__{size: size, root: root}
+  end
+
+  ##
+
+  defp erl_iterator_order(:asc), do: :ordered
+  defp erl_iterator_order(:desc), do: :reversed
+
+  defp stream_next(iter) do
+    case :xb5_sets_node.next(iter) do
+      {value, iter} ->
+        {[value], iter}
+
+      :none ->
+        {:halt, iter}
+    end
+  end
+
+  defp stream_after(_iter) do
+    :ok
   end
 
   ##

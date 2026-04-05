@@ -43,6 +43,7 @@ defmodule Xb5.Tree do
   @type t(key, value) :: %__MODULE__{size: non_neg_integer(), root: :xb5_trees_node.t(key, value)}
   @type t :: t(key, value)
   @type key :: term
+  @type order :: :asc | :desc
   @type value :: term
 
   ## API
@@ -1038,6 +1039,68 @@ defmodule Xb5.Tree do
   end
 
   @doc """
+  Returns a lazy stream over all entries of `tree` as `{key, value}` pairs.
+
+  `order` controls traversal direction: `:asc` (ascending by key, the
+  default) or `:desc` (descending by key).
+
+  ## Examples
+
+      iex> tree = Xb5.Tree.new([{1, :a}, {2, :b}, {3, :c}])
+      iex> Xb5.Tree.stream(tree) |> Enum.to_list()
+      [{1, :a}, {2, :b}, {3, :c}]
+      iex> Xb5.Tree.stream(tree, :desc) |> Enum.to_list()
+      [{3, :c}, {2, :b}, {1, :a}]
+      iex> Xb5.Tree.stream(Xb5.Tree.new()) |> Enum.to_list()
+      []
+
+  """
+  @spec stream(t(key, value), order) :: Enumerable.t()
+  def stream(tree, order \\ :asc)
+
+  def stream(%__MODULE__{root: root}, order) do
+    erl_iterator_order = erl_iterator_order(order)
+
+    Stream.resource(
+      fn -> :xb5_trees_node.iterator(root, erl_iterator_order) end,
+      &stream_next/1,
+      &stream_after/1
+    )
+  end
+
+  @doc """
+  Returns a lazy stream over entries of `tree` starting from `key`, yielding
+  `{key, value}` pairs.
+
+  For `:asc` (the default), starts at the first key greater than or equal
+  to `key`. For `:desc`, starts at the first key less than or equal to
+  `key`. Returns an empty stream if no such key exists.
+
+  ## Examples
+
+      iex> tree = Xb5.Tree.new([{1, :a}, {2, :b}, {3, :c}, {4, :d}, {5, :e}])
+      iex> Xb5.Tree.stream_from(tree, 3) |> Enum.to_list()
+      [{3, :c}, {4, :d}, {5, :e}]
+      iex> Xb5.Tree.stream_from(tree, 3, :desc) |> Enum.to_list()
+      [{3, :c}, {2, :b}, {1, :a}]
+      iex> Xb5.Tree.stream_from(tree, 6) |> Enum.to_list()
+      []
+
+  """
+  @spec stream_from(t(key, value), key, order) :: Enumerable.t()
+  def stream_from(tree, key, order \\ :asc)
+
+  def stream_from(%__MODULE__{root: root}, key, order) do
+    erl_iterator_order = erl_iterator_order(order)
+
+    Stream.resource(
+      fn -> :xb5_trees_node.iterator_from(key, root, erl_iterator_order) end,
+      &stream_next/1,
+      &stream_after/1
+    )
+  end
+
+  @doc """
   Returns structural statistics about the underlying B-tree.
 
   Useful for inspecting tree balance and node utilization.
@@ -1326,6 +1389,25 @@ defmodule Xb5.Tree do
 
   defp split_with_recur([], _fun, size1, acc1, size2, acc2) do
     split_finish(size1, acc1, size2, acc2)
+  end
+
+  ##
+
+  defp erl_iterator_order(:asc), do: :ordered
+  defp erl_iterator_order(:desc), do: :reversed
+
+  defp stream_next(iter) do
+    case :xb5_trees_node.next(iter) do
+      {key, value, iter} ->
+        {[{key, value}], iter}
+
+      :none ->
+        {:halt, iter}
+    end
+  end
+
+  defp stream_after(_iter) do
+    :ok
   end
 
   ##

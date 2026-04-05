@@ -1378,6 +1378,158 @@ defmodule Xb5BagTest do
     end
   end
 
+  # ---------------------------------------------------------------------------
+  # Stream API
+  # ---------------------------------------------------------------------------
+
+  describe "stream" do
+    test "asc matches to_list" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        result = Xb5.Bag.stream(bag) |> Enum.to_list()
+        assert canon_list(result) == canon_list(ref_elements)
+        assert length(result) == size
+      end)
+    end
+
+    test "desc matches desc to_list" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        result = Xb5.Bag.stream(bag, :desc) |> Enum.to_list()
+        assert canon_list(result) == canon_list(Enum.reverse(ref_elements))
+        assert length(result) == size
+      end)
+    end
+
+    test "partial consumption via Enum.take" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size >= 2 do
+          take = div(size, 2)
+          result = Xb5.Bag.stream(bag) |> Enum.take(take)
+          assert canon_list(result) == canon_list(Enum.take(ref_elements, take))
+        end
+      end)
+    end
+  end
+
+  describe "stream_from" do
+    test "asc: multiple sampled existing elements as start points" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          ref_elements
+          |> TU.list_shuffle()
+          |> Enum.take(10)
+          |> Enum.each(fn start_elem ->
+            result = Xb5.Bag.stream_from(bag, start_elem) |> Enum.to_list()
+            expected = Enum.drop_while(ref_elements, fn e -> e < start_elem end)
+            assert canon_list(result) == canon_list(expected)
+          end)
+        end
+      end)
+    end
+
+    test "asc: starting below all elements yields full stream" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          before_all = TU.element_smaller(hd(ref_elements))
+          result = Xb5.Bag.stream_from(bag, before_all) |> Enum.to_list()
+          assert canon_list(result) == canon_list(ref_elements)
+        end
+      end)
+    end
+
+    test "asc: starting above all elements yields empty stream" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          after_all = TU.element_larger(List.last(ref_elements))
+          assert Xb5.Bag.stream_from(bag, after_all) |> Enum.to_list() == []
+        end
+      end)
+    end
+
+    test "desc: multiple sampled existing elements as start points" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          ref_elements
+          |> TU.list_shuffle()
+          |> Enum.take(10)
+          |> Enum.each(fn start_elem ->
+            result = Xb5.Bag.stream_from(bag, start_elem, :desc) |> Enum.to_list()
+
+            expected =
+              ref_elements |> Enum.take_while(fn e -> e <= start_elem end) |> Enum.reverse()
+
+            assert canon_list(result) == canon_list(expected)
+          end)
+        end
+      end)
+    end
+
+    test "desc: starting above all elements yields full desc stream" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          after_all = TU.element_larger(List.last(ref_elements))
+          result = Xb5.Bag.stream_from(bag, after_all, :desc) |> Enum.to_list()
+          assert canon_list(result) == canon_list(Enum.reverse(ref_elements))
+        end
+      end)
+    end
+
+    test "desc: starting below all elements yields empty stream" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          before_all = TU.element_smaller(hd(ref_elements))
+          assert Xb5.Bag.stream_from(bag, before_all, :desc) |> Enum.to_list() == []
+        end
+      end)
+    end
+  end
+
+  describe "stream_from_index" do
+    test "multiple sampled valid positive indices yield correct suffix" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          for(_ <- 1..min(10, size)//1, do: :rand.uniform(size) - 1)
+          |> Enum.each(fn idx ->
+            result = Xb5.Bag.stream_from_index(bag, idx) |> Enum.to_list()
+            assert canon_list(result) == canon_list(Enum.drop(ref_elements, idx))
+            assert length(result) == size - idx
+          end)
+        end
+      end)
+    end
+
+    test "multiple sampled valid negative indices yield correct suffix" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          for(_ <- 1..min(10, size)//1, do: -:rand.uniform(size))
+          |> Enum.each(fn idx ->
+            result = Xb5.Bag.stream_from_index(bag, idx) |> Enum.to_list()
+            assert canon_list(result) == canon_list(Enum.drop(ref_elements, size + idx))
+            assert length(result) == -idx
+          end)
+        end
+      end)
+    end
+
+    test "out-of-bounds indices yield empty stream" do
+      BTU.foreach_test_bag(fn size, _ref_elements, bag ->
+        assert Xb5.Bag.stream_from_index(bag, size) |> Enum.to_list() == []
+        assert Xb5.Bag.stream_from_index(bag, -(size + 1)) |> Enum.to_list() == []
+      end)
+    end
+
+    test "partial consumption from a sampled index" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size >= 4 do
+          idx = :rand.uniform(size - 1) - 1
+          take = :rand.uniform(size - idx)
+          result = Xb5.Bag.stream_from_index(bag, idx) |> Enum.take(take)
+          expected = ref_elements |> Enum.drop(idx) |> Enum.take(take)
+          assert canon_list(result) == canon_list(expected)
+        end
+      end)
+    end
+  end
+
   describe "Enumerable protocol" do
     test "count, member?, reduce, and slice" do
       BTU.foreach_test_bag(fn size, ref_elements, bag ->
