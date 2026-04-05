@@ -1179,7 +1179,7 @@ defmodule Xb5.Tree do
   end
 
   defp from_orddict(size, orddict) do
-    root = :xb5_trees_node.from_orddict(orddict, size)
+    root = :xb5_trees_node.from_orddict(size, orddict)
     %__MODULE__{size: size, root: root}
   end
 

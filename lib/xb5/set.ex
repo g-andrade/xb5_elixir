@@ -580,7 +580,7 @@ defmodule Xb5.Set do
   end
 
   defp from_ordset(size, ordset) do
-    root = :xb5_sets_node.from_ordset(ordset, size)
+    root = :xb5_sets_node.from_ordset(size, ordset)
     %__MODULE__{size: size, root: root}
   end
 

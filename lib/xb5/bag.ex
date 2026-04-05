@@ -633,7 +633,7 @@ defmodule Xb5.Bag do
 
   defp from_ordered_list(list) do
     size = length(list)
-    root = :xb5_bag_node.from_ordered_list(list, size)
+    root = :xb5_bag_node.from_ordered_list(size, list)
     %__MODULE__{size: size, root: root}
   end
 
