@@ -5,6 +5,8 @@ defmodule Xb5SetTest do
   alias Xb5TestUtils, as: TU
   alias Xb5SetTestUtils, as: STU
 
+  doctest Xb5.Set
+
   # ---------------------------------------------------------------------------
   # Basic API
   # ---------------------------------------------------------------------------

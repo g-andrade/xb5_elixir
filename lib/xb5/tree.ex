@@ -28,10 +28,8 @@ defmodule Xb5.Tree do
 
       iex> tree = Xb5.Tree.new([b: 2, a: 1])
       Xb5.Tree.new([a: 1, b: 2])
-
       iex> Xb5.Tree.get(tree, :a)
       1
-
       iex> Xb5.Tree.largest!(tree)
       {:b, 2}
 
@@ -143,8 +141,7 @@ defmodule Xb5.Tree do
 
       iex> Xb5.Tree.fetch!(Xb5.Tree.new([a: 1]), :a)
       1
-      iex> Xb5.Tree.fetch!(Xb5.Tree.new([a: 1]), :b)
-      ** (KeyError) key :b not found
+      iex> assert_raise KeyError, fn -> Xb5.Tree.fetch!(Xb5.Tree.new([a: 1]), :b) end
 
   """
   @spec fetch!(t(), key()) :: value()
@@ -303,10 +300,9 @@ defmodule Xb5.Tree do
       ...> end)
       {1, Xb5.Tree.new([a: "new value!"])}
 
-      iex> Xb5.Tree.get_and_update!(Xb5.Tree.new([a: 1]), :b, fn current_value ->
+      iex> assert_raise KeyError, fn -> Xb5.Tree.get_and_update!(Xb5.Tree.new([a: 1]), :b, fn current_value ->
       ...>   {current_value, "new value!"}
-      ...> end)
-      ** (KeyError) key :b not found
+      ...> end) end
 
       iex> Xb5.Tree.get_and_update!(Xb5.Tree.new([a: 1]), :a, fn _ ->
       ...>   :pop
@@ -1042,6 +1038,58 @@ defmodule Xb5.Tree do
   end
 
   @doc """
+  Returns structural statistics about the underlying B-tree.
+
+  Useful for inspecting tree balance and node utilization.
+
+  ## Examples
+
+      iex> Xb5.Tree.structural_stats(Xb5.Tree.new(Enum.map(1..100, &{&1, &1})))
+      [
+        height: 4,
+        node_counts: [
+          internal4: 2,
+          internal3: 3,
+          internal2: 3,
+          internal1: 1,
+          leaf4: 6,
+          leaf3: 14,
+          leaf2: 5,
+          leaf1: 0
+        ],
+        node_percentages: [
+          internal4: 5.9,
+          internal3: 8.8,
+          internal2: 8.8,
+          internal1: 2.9,
+          leaf4: 17.6,
+          leaf3: 41.2,
+          leaf2: 14.7,
+          leaf1: 0.0
+        ],
+        total_keys: 100,
+        key_percentages: [
+          internal4: 8.0,
+          internal3: 9.0,
+          internal2: 6.0,
+          internal1: 1.0,
+          leaf4: 24.0,
+          leaf3: 42.0,
+          leaf2: 10.0,
+          leaf1: 0.0
+        ],
+        avg_keys_per_node: 2.9411764705882355,
+        avg_keys_per_internal_node: 2.6666666666666665,
+        avg_keys_per_leaf_node: 3.04
+      ]
+
+  """
+  @spec structural_stats(t()) :: :xb5_structural_stats.t()
+  def structural_stats(%__MODULE__{root: root}) do
+    :xb5_trees_node.structural_stats(root)
+  end
+
+  @doc """
   Returns a new tree with all the key-value pairs in `tree` where the key is in `keys`.
 
   If `keys` contains keys that are not in `tree`, they're simply ignored.
@@ -1229,20 +1277,21 @@ defmodule Xb5.Tree do
 
   defp split_recur([{key, _} = pair | next] = list, cmp_keys, size1, acc1, size2, acc2) do
     case cmp_keys do
-      [cmp_key | _] when cmp_key < key ->
-        size2 = size2 + 1
-        acc2 = [pair | acc2]
-        split_recur(next, cmp_keys, size1, acc1, size2, acc2)
+      [cmp_key | next_cmp] ->
+        cond do
+          cmp_key > key ->
+            split_recur(list, next_cmp, size1, acc1, size2, acc2)
 
-      [cmp_key | next_cmp_keys] when cmp_key > key ->
-        size2 = size2 + 1
-        acc2 = [pair | acc2]
-        split_recur(next, next_cmp_keys, size1, acc1, size2, acc2)
+          cmp_key < key ->
+            size2 = size2 + 1
+            acc2 = [pair | acc2]
+            split_recur(next, cmp_keys, size1, acc1, size2, acc2)
 
-      [_ | next_cmp_keys] ->
-        size1 = size1 + 1
-        acc1 = [pair | acc1]
-        split_recur(next, next_cmp_keys, size1, acc1, size2, acc2)
+          true ->
+            size1 = size1 + 1
+            acc1 = [pair | acc1]
+            split_recur(next, cmp_keys, size1, acc1, size2, acc2)
+        end
 
       [] ->
         size2 = size2 + length(list)

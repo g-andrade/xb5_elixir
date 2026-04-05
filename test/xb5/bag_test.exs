@@ -5,6 +5,8 @@ defmodule Xb5BagTest do
   alias Xb5BagTestUtils, as: BTU
   alias Xb5TestUtils, as: TU
 
+  doctest Xb5.Bag
+
   # ---------------------------------------------------------------------------
   # Basic API
   # ---------------------------------------------------------------------------

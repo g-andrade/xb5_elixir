@@ -92,7 +92,7 @@ defmodule Xb5.MixProject do
       source_url: @source_url,
       extras: [
         "CHANGELOG.md",
-        "LICENSE",
+        "LICENSE.txt",
         "README.md": [title: "Xb5"]
       ]
     ]

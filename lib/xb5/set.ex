@@ -28,10 +28,8 @@ defmodule Xb5.Set do
 
       iex> set = Xb5.Set.new([3, 1, 2, 1])
       Xb5.Set.new([1, 2, 3])
-
       iex> Xb5.Set.member?(set, 2)
       true
-
       iex> Xb5.Set.largest!(set)
       3
 
@@ -490,6 +488,58 @@ defmodule Xb5.Set do
     root
     |> :xb5_sets_node.to_rev_list()
     |> split_with_recur(fun, 0, [], 0, [])
+  end
+
+  @doc """
+  Returns structural statistics about the underlying B-tree.
+
+  Useful for inspecting tree balance and node utilization.
+
+  ## Examples
+
+      iex> Xb5.Set.structural_stats(Xb5.Set.new(1..100))
+      [
+        height: 4,
+        node_counts: [
+          internal4: 2,
+          internal3: 3,
+          internal2: 3,
+          internal1: 1,
+          leaf4: 6,
+          leaf3: 14,
+          leaf2: 5,
+          leaf1: 0
+        ],
+        node_percentages: [
+          internal4: 5.9,
+          internal3: 8.8,
+          internal2: 8.8,
+          internal1: 2.9,
+          leaf4: 17.6,
+          leaf3: 41.2,
+          leaf2: 14.7,
+          leaf1: 0.0
+        ],
+        total_keys: 100,
+        key_percentages: [
+          internal4: 8.0,
+          internal3: 9.0,
+          internal2: 6.0,
+          internal1: 1.0,
+          leaf4: 24.0,
+          leaf3: 42.0,
+          leaf2: 10.0,
+          leaf1: 0.0
+        ],
+        avg_keys_per_node: 2.9411764705882355,
+        avg_keys_per_internal_node: 2.6666666666666665,
+        avg_keys_per_leaf_node: 3.04
+      ]
+
+  """
+  @spec structural_stats(t()) :: :xb5_structural_stats.t()
+  def structural_stats(%__MODULE__{root: root}) do
+    :xb5_sets_node.structural_stats(root)
   end
 
   @doc """

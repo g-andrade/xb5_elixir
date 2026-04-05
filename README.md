@@ -112,9 +112,9 @@ iex> Xb5.Bag.percentile_bracket(latencies, 0.00)
 iex> Xb5.Bag.percentile_bracket(latencies, 0.50)
 {:between, 15, 18, 0.5}
 iex> Xb5.Bag.percentile(latencies, 0.50)
-{:value, 16.5}
+16.5
 iex> Xb5.Bag.percentile(latencies, 0.75)
-{:value, 23.75}
+23.75
 ```
 
 `percentile_bracket/3` returns `{:exact, x}` when the percentile falls exactly on one

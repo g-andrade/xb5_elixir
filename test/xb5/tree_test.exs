@@ -5,6 +5,8 @@ defmodule Xb5TreeTest do
   alias Xb5TreeTestUtils, as: TTU
   alias Xb5TestUtils, as: TU
 
+  doctest Xb5.Tree
+
   # ---------------------------------------------------------------------------
   # Basic API
   # ---------------------------------------------------------------------------
@@ -872,12 +874,14 @@ defmodule Xb5TreeTest do
   end
 
   describe "split/split_with" do
+    @tag :tree_split
     test "split partitions by key list" do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
         split_count = min(max(1, div(size, 3)), length(ref_kvs))
 
         keys_to_split =
-          ref_kvs |> TU.list_shuffle() |> Enum.take(split_count) |> Enum.map(fn {k, _} -> k end)
+          (ref_kvs |> TU.list_shuffle() |> Enum.take(split_count) |> Enum.map(fn {k, _} -> k end)) ++
+            for _ <- 1..15, do: TU.new_element()
 
         {t_in, t_out} = Xb5.Tree.split(tree, keys_to_split)
         split_set = MapSet.new(keys_to_split, &TTU.canon_key/1)
