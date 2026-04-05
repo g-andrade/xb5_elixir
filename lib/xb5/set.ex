@@ -156,7 +156,7 @@ defmodule Xb5.Set do
       Xb5.Set.new([])
 
   """
-  @spec intersection(t(val), t(val)) :: t(val) when val: value()
+  @spec intersection(t(value), t(value)) :: t(value)
   def intersection(%__MODULE__{size: size1, root: root1}, %__MODULE__{size: size2, root: root2}) do
     [size | root] = :xb5_sets_node.intersection(size1, root1, size2, root2)
     %__MODULE__{size: size, root: root}
@@ -176,7 +176,7 @@ defmodule Xb5.Set do
       :error
 
   """
-  @spec larger(t(val), val) :: {:ok, val} | :error when val: value()
+  @spec larger(t(value), value) :: {:ok, value} | :error
   def larger(%__MODULE__{root: root}, element) do
     case :xb5_sets_node.larger(element, root) do
       {:found, e} -> {:ok, e}
@@ -197,7 +197,7 @@ defmodule Xb5.Set do
       ** (ArgumentError) set is empty
 
   """
-  @spec largest!(t(val)) :: val when val: value()
+  @spec largest!(t(value)) :: value
   def largest!(%__MODULE__{size: size, root: root}) do
     if size === 0 do
       raise ArgumentError, "set is empty"
@@ -273,7 +273,7 @@ defmodule Xb5.Set do
       Xb5.Set.new([1, 2, 3])
 
   """
-  @spec new(:xb5_sets.set(val) | Enumerable.t()) :: t(val) when val: value()
+  @spec new(:xb5_sets.set(value) | Enumerable.t()) :: t(value)
   def new(input) do
     case :xb5_sets.unwrap(input) do
       {:ok, %{size: size, root: root}} ->
@@ -298,7 +298,7 @@ defmodule Xb5.Set do
       Xb5.Set.new([2, 4])
 
   """
-  @spec new(:xb5_sets.set() | Enumerable.t(), (term() -> val)) :: t(val) when val: value()
+  @spec new(:xb5_sets.set() | Enumerable.t(), (term() -> value)) :: t(value)
   def new(input, transform) do
     case :xb5_sets.unwrap(input) do
       {:ok, %{root: root}} ->
@@ -328,7 +328,7 @@ defmodule Xb5.Set do
       ** (ArgumentError) set is empty
 
   """
-  @spec pop_largest!(t(val)) :: {val, t(val)} when val: value()
+  @spec pop_largest!(t(value)) :: {value, t(value)}
   def pop_largest!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
       raise ArgumentError, "set is empty"
@@ -352,7 +352,7 @@ defmodule Xb5.Set do
       ** (ArgumentError) set is empty
 
   """
-  @spec pop_smallest!(t(val)) :: {val, t(val)} when val: value()
+  @spec pop_smallest!(t(value)) :: {value, t(value)}
   def pop_smallest!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
       raise ArgumentError, "set is empty"
@@ -374,7 +374,7 @@ defmodule Xb5.Set do
       Xb5.Set.new([1, 2, 3, 4])
 
   """
-  @spec put(t(val), new_val) :: t(val | new_val) when val: value(), new_val: value()
+  @spec(put(t(value), new_value) :: t(value | new_value) when new_value: value())
   def put(%__MODULE__{size: size, root: root} = set, value) do
     case :xb5_sets_node.insert_att(value, root) do
       :key_exists ->
@@ -432,7 +432,7 @@ defmodule Xb5.Set do
       :error
 
   """
-  @spec smaller(t(val), val) :: {:ok, val} | :error when val: value()
+  @spec smaller(t(value), value) :: {:ok, value} | :error
   def smaller(%__MODULE__{root: root}, element) do
     case :xb5_sets_node.smaller(element, root) do
       {:found, e} -> {:ok, e}
@@ -453,7 +453,7 @@ defmodule Xb5.Set do
       ** (ArgumentError) set is empty
 
   """
-  @spec smallest!(t(val)) :: val when val: value()
+  @spec smallest!(t(value)) :: value
   def smallest!(%__MODULE__{size: size, root: root}) do
     if size === 0 do
       raise ArgumentError, "set is empty"
@@ -508,7 +508,7 @@ defmodule Xb5.Set do
       []
 
   """
-  @spec stream(t(val), order) :: Enumerable.t() when val: value()
+  @spec stream(t(value), order) :: Enumerable.t()
   def stream(set, order \\ :asc)
 
   def stream(%__MODULE__{root: root}, order) do
@@ -539,7 +539,7 @@ defmodule Xb5.Set do
       []
 
   """
-  @spec stream_from(t(val), val, order) :: Enumerable.t() when val: value()
+  @spec stream_from(t(value), value, order) :: Enumerable.t()
   def stream_from(set, value, order \\ :asc)
 
   def stream_from(%__MODULE__{root: root}, value, order) do
@@ -647,7 +647,7 @@ defmodule Xb5.Set do
       [1, 2, 3]
 
   """
-  @spec to_list(t(val)) :: [val] when val: value()
+  @spec to_list(t(value)) :: [value]
   def to_list(%__MODULE__{root: root}) do
     :xb5_sets_node.to_list(root)
   end
@@ -679,7 +679,7 @@ defmodule Xb5.Set do
       3
 
   """
-  @spec unwrap!(t(val)) :: :xb5_sets.unwrapped_set(val) when val: value()
+  @spec unwrap!(t(value)) :: :xb5_sets.unwrapped_set(value)
   def unwrap!(%__MODULE__{size: size, root: root}) do
     %{size: size, root: root}
   end
@@ -737,9 +737,9 @@ defmodule Xb5.Set do
       {:ok, Xb5.Set.size(set)}
     end
 
-    def member?(set, val) do
+    def member?(set, value) do
       # NOTE: not strict comparison
-      {:ok, Xb5.Set.member?(set, val)}
+      {:ok, Xb5.Set.member?(set, value)}
     end
 
     def slice(set) do
