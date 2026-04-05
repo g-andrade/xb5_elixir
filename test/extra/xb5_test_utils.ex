@@ -163,6 +163,17 @@ defmodule Xb5TestUtils do
     end
   end
 
+  @doc "Removes all occurrences of `elem` (by `==`) from `sorted_list`."
+  def remove_all_from_sorted_list(elem, [h | t] = list) do
+    cond do
+      elem > h -> [h | remove_all_from_sorted_list(elem, t)]
+      elem == h -> remove_all_from_sorted_list(elem, t)
+      true -> list
+    end
+  end
+
+  def remove_all_from_sorted_list(_elem, []), do: []
+
   # -------------------------------------------------------------------------
   # Sampling helpers
   # -------------------------------------------------------------------------

@@ -109,6 +109,26 @@ defmodule Xb5.Bag do
   end
 
   @doc """
+  Removes all occurrences of `value` from the bag. Returns the bag unchanged if `value` is not present.
+
+  ## Examples
+
+      iex> bag = Xb5.Bag.new([1, 1, 2, 3])
+      iex> Xb5.Bag.delete_all(bag, 1)
+      Xb5.Bag.new([2, 3])
+      iex> Xb5.Bag.delete_all(bag, 4)
+      Xb5.Bag.new([1, 1, 2, 3])
+
+  """
+  @spec delete_all(t(val1), val2) :: t(val1) when val1: value(), val2: value()
+  def delete_all(%__MODULE__{size: size, root: root} = bag, value) do
+    case :xb5_bag_node.delete_att(value, root) do
+      :badkey -> bag
+      root -> delete_all_recur(value, size - 1, root)
+    end
+  end
+
+  @doc """
   Returns the 0-based index (rank) of `value` in the bag, or `:error` if not present.
 
   ## Examples
@@ -630,6 +650,13 @@ defmodule Xb5.Bag do
   end
 
   ## Internal
+
+  defp delete_all_recur(value, size, root) do
+    case :xb5_bag_node.delete_att(value, root) do
+      :badkey -> %__MODULE__{size: size, root: root}
+      root -> delete_all_recur(value, size - 1, root)
+    end
+  end
 
   defp from_ordered_list(list) do
     size = length(list)

@@ -151,6 +151,35 @@ defmodule Xb5BagTest do
     end
   end
 
+  describe "delete_all" do
+    test "deletes all occurrences of each unique element, interleaved with absent-key checks" do
+      BTU.foreach_test_bag(fn _size, ref_elements, bag ->
+        delete_keys =
+          ref_elements
+          |> :lists.usort()
+          |> TU.list_shuffle()
+          |> Enum.map(&TU.randomly_switch_number_type/1)
+
+        {bag_n, []} =
+          Enum.reduce(delete_keys, {bag, ref_elements}, fn elem, {bag1, remaining1} ->
+            check_delete_all_absent(bag1, remaining1, 3)
+
+            bag2 = Xb5.Bag.delete_all(bag1, elem)
+            remaining2 = TU.remove_all_from_sorted_list(elem, remaining1)
+            assert canon_list(Xb5.Bag.to_list(bag2)) == canon_list(remaining2)
+            assert Xb5.Bag.size(bag2) == length(remaining2)
+
+            {bag2, remaining2}
+          end)
+
+        assert Xb5.Bag.to_list(bag_n) == []
+        assert Xb5.Bag.size(bag_n) == 0
+
+        check_delete_all_absent(bag_n, [], 3)
+      end)
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Smaller and Larger
   # ---------------------------------------------------------------------------
@@ -718,6 +747,20 @@ defmodule Xb5BagTest do
   end
 
   defp check_delete_absent(_bag, _remaining, 0), do: :ok
+
+  defp check_delete_all_absent(bag, remaining, amount) when amount > 0 do
+    elem = TU.new_element()
+
+    if Enum.any?(remaining, &(&1 == elem)) do
+      check_delete_all_absent(bag, remaining, amount)
+    else
+      bag2 = Xb5.Bag.delete_all(bag, elem)
+      assert bag2 == bag
+      check_delete_all_absent(bag, remaining, amount - 1)
+    end
+  end
+
+  defp check_delete_all_absent(_bag, _remaining, 0), do: :ok
 
   defp run_smaller(unique_ref, bag) do
     case unique_ref do
