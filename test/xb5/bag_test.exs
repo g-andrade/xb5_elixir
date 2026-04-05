@@ -22,6 +22,31 @@ defmodule Xb5BagTest do
     end
   end
 
+  describe "at" do
+    test "returns element at 0-based index, nil if out of bounds" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        for {elem, idx} <- Enum.with_index(ref_elements) do
+          assert Xb5.Bag.at(bag, idx) == elem
+        end
+
+        assert Xb5.Bag.at(bag, size) == nil
+        assert Xb5.Bag.at(bag, size, :missing) == :missing
+      end)
+    end
+
+    test "supports negative indices" do
+      BTU.foreach_test_bag(fn size, ref_elements, bag ->
+        if size > 0 do
+          for {elem, idx} <- Enum.with_index(ref_elements) do
+            assert Xb5.Bag.at(bag, idx - size) == elem
+          end
+        end
+
+        assert Xb5.Bag.at(bag, -(size + 1)) == nil
+      end)
+    end
+  end
+
   describe "member?" do
     test "existing elements are found, absent elements are not" do
       BTU.foreach_test_bag(fn size, ref_elements, bag ->

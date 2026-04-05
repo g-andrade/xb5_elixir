@@ -55,6 +55,42 @@ defmodule Xb5.Bag do
   ## API
 
   @doc """
+  Finds the element at the given `index` (0-based). Returns `default` if `index` is out of bounds.
+  Runs in O(log n) time.
+
+  A negative `index` counts from the end: `-1` is the last element, `-2` the second-to-last, etc.
+
+  This function is an optimized version of `Enum.at/2`.
+
+  ## Examples
+
+      iex> bag = Xb5.Bag.new([1, 2, 3])
+      iex> Xb5.Bag.at(bag, 0)
+      1
+      iex> Xb5.Bag.at(bag, 2)
+      3
+      iex> Xb5.Bag.at(bag, -1)
+      3
+      iex> Xb5.Bag.at(bag, 5)
+      nil
+      iex> Xb5.Bag.at(bag, 5, :missing)
+      :missing
+
+  """
+  @spec at(t(value), index, default) :: value | default when index: integer, default: term()
+  def at(bag, value, default \\ nil)
+
+  def at(%__MODULE__{size: size, root: root}, index, default) when is_integer(index) do
+    resolved_index = resolve_index(size, index)
+
+    if resolved_index < 0 or resolved_index >= size do
+      default
+    else
+      :xb5_bag_node.nth(resolved_index + 1, root)
+    end
+  end
+
+  @doc """
   Returns the number of times `value` appears in `bag`. Values are matched using `==`.
 
   ## Examples
@@ -146,7 +182,7 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the 0-based index of `value` in the bag, or `nil` if not present.
+  Returns the 0-based index of `value` in the bag, or `nil` if not present. Runs in O(log n) time.
 
   ## Examples
 
@@ -168,7 +204,7 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the 0-based index of `value` in the bag. Raises `KeyError` if not present.
+  Returns the 0-based index of `value` in the bag. Raises `KeyError` if not present. Runs in O(log n) time.
 
   ## Examples
 
@@ -339,7 +375,8 @@ defmodule Xb5.Bag do
 
   @doc """
   Returns the percentile value for the given `percentile` (0.0–1.0) using the given method options.
-  Returns `{:value, x}` or `:none`.
+  Returns `nil` if the bag is empty or the percentile is out of range for the chosen method.
+  Runs in O(log n) time.
 
   ## Examples
 
@@ -371,8 +408,8 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the percentile bracket for the given `percentile`.
-  Returns `{:exact, x}`, `{:between, low, high}`, or `:none`.
+  Returns the percentile bracket for the given `percentile`, or `nil` if the bag is empty or the
+  percentile is out of range for the chosen method. Runs in O(log n) time.
 
   ## Examples
 
@@ -402,7 +439,7 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the percentile rank of `value` in the bag as a float in 0.0–1.0.
+  Returns the percentile rank of `value` in the bag as a float in 0.0–1.0. Runs in O(log n) time.
   Raises `ArgumentError` if the bag is empty.
 
   ## Examples
@@ -633,6 +670,14 @@ defmodule Xb5.Bag do
     size = length(list)
     root = :xb5_bag_node.from_ordered_list(size, list)
     %__MODULE__{size: size, root: root}
+  end
+
+  defp resolve_index(size, index) do
+    if index < 0 do
+      size + index
+    else
+      index
+    end
   end
 
   ## Protocols - Enumerable
