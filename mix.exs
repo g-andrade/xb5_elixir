@@ -35,7 +35,7 @@ defmodule Xb5.MixProject do
     List.flatten([
       {:ex_doc, "~> 0.30", only: :dev, runtime: false},
       {:recon, "~> 2.5", only: [:dev, :test], runtime: false},
-      {:xb5, "0.1.0-rc.2"},
+      {:xb5, "0.1.0-rc.3"},
       maybe_credo_dep(),
       maybe_dialyxir_dep(),
       maybe_styler_dep()
