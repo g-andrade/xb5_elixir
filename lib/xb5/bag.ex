@@ -217,7 +217,7 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the smallest element strictly greater than `element`, or `:error` if none exists.
+  Returns the smallest element strictly greater than `value`, or `:error` if none exists.
 
   ## Examples
 
@@ -229,8 +229,8 @@ defmodule Xb5.Bag do
 
   """
   @spec higher(t(value), value) :: {:ok, value} | :error
-  def higher(%__MODULE__{root: root}, element) do
-    case :xb5_bag_node.larger(element, root) do
+  def higher(%__MODULE__{root: root}, value) do
+    case :xb5_bag_node.larger(value, root) do
       {:found, e} -> {:ok, e}
       :none -> :error
     end
@@ -316,7 +316,7 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the largest element strictly less than `element`, or `:error` if none exists.
+  Returns the largest element strictly less than `value`, or `:error` if none exists.
 
   ## Examples
 
@@ -328,8 +328,8 @@ defmodule Xb5.Bag do
 
   """
   @spec lower(t(value), value) :: {:ok, value} | :error
-  def lower(%__MODULE__{root: root}, element) do
-    case :xb5_bag_node.smaller(element, root) do
+  def lower(%__MODULE__{root: root}, value) do
+    case :xb5_bag_node.smaller(value, root) do
       {:found, e} -> {:ok, e}
       :none -> :error
     end
@@ -684,11 +684,11 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns a lazy stream over elements of `bag` starting from `element`.
+  Returns a lazy stream over elements of `bag` starting from `value`.
 
   For `:asc` (the default), starts at the first element greater than or
-  equal to `element`. For `:desc`, starts at the first element less than or
-  equal to `element`. Returns an empty stream if no such element exists.
+  equal to `value`. For `:desc`, starts at the first element less than or
+  equal to `value`. Returns an empty stream if no such element exists.
 
   ## Examples
 

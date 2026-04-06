@@ -1204,6 +1204,15 @@ defmodule Xb5TreeTest do
         end
       end)
     end
+
+    test "Enum.slice with step and non-zero start" do
+      tree = Xb5.Tree.new([{1, :a}, {2, :b}, {3, :c}, {4, :d}])
+      # step 2 with non-zero start: entries at positions 1, 3
+      assert Enum.slice(tree, 1..3//2) == [{2, :b}, {4, :d}]
+      tree2 = Xb5.Tree.new([{1, :a}, {2, :b}, {3, :c}, {4, :d}, {5, :e}, {6, :f}])
+      # step 2 from start: entries at positions 0, 2, 4
+      assert Enum.slice(tree2, 0..4//2) == [{1, :a}, {3, :c}, {5, :e}]
+    end
   end
 
   describe "Collectable protocol" do

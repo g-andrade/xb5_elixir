@@ -825,6 +825,15 @@ defmodule Xb5SetTest do
         end
       end)
     end
+
+    test "Enum.slice with step and non-zero start" do
+      set = Xb5.Set.new([1, 2, 3, 4])
+      # step 2 with non-zero start: elements at positions 1, 3
+      assert Enum.slice(set, 1..3//2) == [2, 4]
+      set2 = Xb5.Set.new([1, 2, 3, 4, 5, 6])
+      # step 2 from start: elements at positions 0, 2, 4
+      assert Enum.slice(set2, 0..4//2) == [1, 3, 5]
+    end
   end
 
   describe "Collectable protocol" do

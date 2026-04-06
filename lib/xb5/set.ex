@@ -184,9 +184,9 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns the immediate successor of `element` in `set`.
+  Returns the immediate successor of `value` in `set`.
 
-  If `set` contains an element strictly greater than `element`, it is returned as
+  If `set` contains an element strictly greater than `value`, it is returned as
   `{:ok, next}`. Otherwise returns `:error`.
 
   ## Examples
@@ -198,8 +198,8 @@ defmodule Xb5.Set do
 
   """
   @spec higher(t(value), value) :: {:ok, value} | :error
-  def higher(%__MODULE__{root: root}, element) do
-    case :xb5_sets_node.larger(element, root) do
+  def higher(%__MODULE__{root: root}, value) do
+    case :xb5_sets_node.larger(value, root) do
       {:found, e} -> {:ok, e}
       :none -> :error
     end
@@ -262,9 +262,9 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns the immediate predecessor of `element` in `set`.
+  Returns the immediate predecessor of `value` in `set`.
 
-  If `set` contains an element strictly less than `element`, it is returned as
+  If `set` contains an element strictly less than `value`, it is returned as
   `{:ok, prev}`. Otherwise returns `:error`.
 
   ## Examples
@@ -276,8 +276,8 @@ defmodule Xb5.Set do
 
   """
   @spec lower(t(value), value) :: {:ok, value} | :error
-  def lower(%__MODULE__{root: root}, element) do
-    case :xb5_sets_node.smaller(element, root) do
+  def lower(%__MODULE__{root: root}, value) do
+    case :xb5_sets_node.smaller(value, root) do
       {:found, e} -> {:ok, e}
       :none -> :error
     end
@@ -393,7 +393,7 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Removes and returns `{element, updated_set}` for the first (smallest) element in `set`.
+  Removes and returns `{value, updated_set}` for the first (smallest) element in `set`.
 
   Raises `Enum.EmptyError` if `set` is empty.
 
@@ -417,7 +417,7 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Removes and returns `{element, updated_set}` for the last (largest) element in `set`.
+  Removes and returns `{value, updated_set}` for the last (largest) element in `set`.
 
   Raises `Enum.EmptyError` if `set` is empty.
 
@@ -555,11 +555,11 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns a lazy stream over elements of `set` starting from `element`.
+  Returns a lazy stream over elements of `set` starting from `value`.
 
   For `:asc` (the default), starts at the first element greater than or
-  equal to `element`. For `:desc`, starts at the first element less than or
-  equal to `element`. Returns an empty stream if no such element exists.
+  equal to `value`. For `:desc`, starts at the first element less than or
+  equal to `value`. Returns an empty stream if no such element exists.
 
   ## Examples
 

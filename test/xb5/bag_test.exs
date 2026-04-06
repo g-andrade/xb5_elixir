@@ -1595,6 +1595,9 @@ defmodule Xb5BagTest do
       bag = Xb5.Bag.new([1, 2, 3, 4, 5, 6])
       # step 2: elements at positions 0, 2, 4
       assert Enum.slice(bag, 0..4//2) == [1, 3, 5]
+      # step 2 with non-zero start: elements at positions 1, 3
+      bag2 = Xb5.Bag.new([1, 2, 3, 4])
+      assert Enum.slice(bag2, 1..3//2) == [2, 4]
     end
   end
 
