@@ -807,6 +807,10 @@ defmodule Xb5.Set do
   defimpl Inspect do
     import Inspect.Algebra
 
+    unless Version.match?(System.version(), "~> 1.19") do
+      def to_doc_with_opts(term, opts), do: to_doc(term, opts)
+    end
+
     def inspect(set, %Inspect.Opts{} = opts) do
       {doc, %{limit: limit}} =
         set
