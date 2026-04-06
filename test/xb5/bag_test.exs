@@ -1047,6 +1047,7 @@ defmodule Xb5BagTest do
                     flunk("Unexpected bracket: #{inspect(other)}")
                 end
 
+                # credo:disable-for-next-line Credo.Check.Refactor.Nesting
                 if is_number(a) and is_number(b) do
                   result = Xb5.Bag.percentile(bag, percentile)
                   expected = round_float_precision(a + t * (b - a))
@@ -1072,6 +1073,7 @@ defmodule Xb5BagTest do
     )
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp test_valid_percentile_exclusive(size, ref_elements, bag) do
     foreach_percentile(
       fn percentile, low_rank, high_rank ->
@@ -1124,6 +1126,7 @@ defmodule Xb5BagTest do
                       flunk("Unexpected bracket: #{inspect(other)}")
                   end
 
+                  # credo:disable-for-next-line Credo.Check.Refactor.Nesting
                   if is_number(a) and is_number(b) do
                     result = Xb5.Bag.percentile(bag, percentile, [{:method, :exclusive}])
                     expected = round_float_precision(a + t * (b - a))
@@ -1319,6 +1322,7 @@ defmodule Xb5BagTest do
               |> Enum.take(rough_amount_to_remove)
 
             aux_set = MapSet.new(elements_to_remove, &TU.canon_element/1)
+            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
             fn e -> not MapSet.member?(aux_set, TU.canon_element(e)) end
         end
 

@@ -1,4 +1,10 @@
 defmodule Xb5BagTestUtils do
+  @moduledoc """
+  Test helpers specific to `Xb5.Bag`. Translated from the per-suite helpers in
+  `xb5_bag_test_SUITE.erl` that are bag-specific (repeated element generation,
+  etc).
+  """
+
   import ExUnit.Assertions
 
   # new_ref_elements/1: generates `size` elements with ~20% repetition chance.

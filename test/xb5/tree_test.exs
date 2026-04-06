@@ -1510,6 +1510,7 @@ defmodule Xb5TreeTest do
       map_fun = fn k, v ->
         canon_k = TTU.canon_key(k)
 
+        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
         if :erlang.phash2(canon_k, p_hash_range) < p_hash_ceiling do
           :erlang.phash2([random_factor | canon_k], 3)
         else
