@@ -28,7 +28,7 @@ defmodule Xb5.MixProject do
   end
 
   defp description do
-    "TODO"
+    "B-trees of order 5 (tree, set, order-statistic multiset) for Elixir"
   end
 
   defp deps do
