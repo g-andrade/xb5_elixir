@@ -447,6 +447,9 @@ defmodule Xb5.Bag do
   Returns `nil` if the bag is empty or the percentile is out of range for the chosen method.
   Runs in O(log n) time.
 
+  Raises `Xb5.Bag.NonNumericInterpolationError` if the percentile falls between two elements
+  and those elements are not numbers (interpolation is impossible for non-numeric values).
+
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 2, 3, 4])
@@ -470,9 +473,14 @@ defmodule Xb5.Bag do
   def percentile(%__MODULE__{size: size, root: root}, percentile, opts) do
     value_fun = fn value -> value end
 
-    case :xb5_bag_utils.percentile(percentile, size, root, value_fun, opts) do
-      :none -> nil
-      result -> result
+    try do
+      case :xb5_bag_utils.percentile(percentile, size, root, value_fun, opts) do
+        :none -> nil
+        result -> result
+      end
+    catch
+      :error, {:bracket_value_not_a_number, %{value: value, bracket: bracket}} ->
+        raise Xb5.Bag.NonNumericInterpolationError, value: value, bracket: bracket
     end
   end
 

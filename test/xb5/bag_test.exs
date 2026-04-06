@@ -747,6 +747,26 @@ defmodule Xb5BagTest do
     end
   end
 
+  describe "percentile_non_numeric_interpolation_error" do
+    test "raises NonNumericInterpolationError when interpolation between non-numeric elements is required" do
+      bag = Xb5.Bag.new([:a, :b])
+
+      error =
+        assert_raise Xb5.Bag.NonNumericInterpolationError,
+                     ~r/percentile interpolation requires numeric elements/,
+                     fn -> Xb5.Bag.percentile(bag, 0.5) end
+
+      assert error.value in [:a, :b]
+      assert match?({:between, :a, :b, _}, error.bracket)
+    end
+
+    test "does not raise when percentile falls exactly on an element" do
+      bag = Xb5.Bag.new([:a, :b])
+      assert Xb5.Bag.percentile(bag, 0.0) == :a
+      assert Xb5.Bag.percentile(bag, 1.0) == :b
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # Additional Functions
   # ---------------------------------------------------------------------------
