@@ -1,3 +1,4 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
 # credo:disable-for-this-file Credo.Check.Refactor.CyclomaticComplexity
 defmodule Xb5TestUtils do
   import Bitwise

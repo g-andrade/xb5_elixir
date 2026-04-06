@@ -1453,10 +1453,12 @@ defmodule Xb5.Tree do
   ## Protocols - Enumerable
 
   defimpl Enumerable do
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def count(tree) do
       {:ok, Xb5.Tree.size(tree)}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def member?(%Xb5.Tree{root: root}, {key, value}) do
       result =
         :xb5_trees_node.get_att(
@@ -1469,15 +1471,18 @@ defmodule Xb5.Tree do
       {:ok, result}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def member?(_tree, _other) do
       {:ok, false}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def slice(tree) do
       size = Xb5.Tree.size(tree)
       {:ok, size, &Xb5.Tree.to_list/1}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def reduce(%Xb5.Tree{root: root}, acc, fun) do
       :xb5_trees_node.elixir_reduce(fun, acc, root)
     end
@@ -1496,6 +1501,7 @@ defmodule Xb5.Tree do
   ## Protocols - Collectable
 
   defimpl Collectable do
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def into(%@for{} = tree) do
       fun = fn
         tree, {:cont, {key, value}} -> Xb5.Tree.put(tree, key, value)
@@ -1513,9 +1519,10 @@ defmodule Xb5.Tree do
     import Inspect.Algebra
 
     unless Version.match?(System.version(), "~> 1.19") do
-      def to_doc_with_opts(term, opts), do: to_doc(term, opts)
+      defp to_doc_with_opts(term, opts), do: to_doc(term, opts)
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def inspect(tree, %Inspect.Opts{} = opts) do
       {doc, %{limit: limit}} =
         tree

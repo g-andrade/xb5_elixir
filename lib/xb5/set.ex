@@ -768,20 +768,24 @@ defmodule Xb5.Set do
   ## Protocols - Enumerable
 
   defimpl Enumerable do
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def count(set) do
       {:ok, Xb5.Set.size(set)}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def member?(set, value) do
       # NOTE: not strict comparison
       {:ok, Xb5.Set.member?(set, value)}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def slice(set) do
       size = Xb5.Set.size(set)
       {:ok, size, &Xb5.Set.to_list/1}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def reduce(set, acc, fun) do
       %Xb5.Set{root: root} = set
       :xb5_sets_node.elixir_reduce(fun, acc, root)
@@ -791,6 +795,7 @@ defmodule Xb5.Set do
   ## Protocols - Collectable
 
   defimpl Collectable do
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def into(%@for{} = set) do
       fun = fn
         list, {:cont, x} -> [x | list]
@@ -808,9 +813,10 @@ defmodule Xb5.Set do
     import Inspect.Algebra
 
     unless Version.match?(System.version(), "~> 1.19") do
-      def to_doc_with_opts(term, opts), do: to_doc(term, opts)
+      defp to_doc_with_opts(term, opts), do: to_doc(term, opts)
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def inspect(set, %Inspect.Opts{} = opts) do
       {doc, %{limit: limit}} =
         set

@@ -1,3 +1,4 @@
+# credo:disable-for-this-file Credo.Check.Readability.Specs
 defmodule Xb5BagTestUtils do
   @moduledoc """
   Test helpers specific to `Xb5.Bag`. Translated from the per-suite helpers in

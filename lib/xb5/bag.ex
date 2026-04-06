@@ -900,19 +900,23 @@ defmodule Xb5.Bag do
   ## Protocols - Enumerable
 
   defimpl Enumerable do
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def count(bag) do
       {:ok, Xb5.Bag.size(bag)}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def member?(bag, value) do
       # NOTE: not strict comparison
       {:ok, Xb5.Bag.member?(bag, value)}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def slice(%Xb5.Bag{size: bag_size, root: root}) do
       {:ok, bag_size, &:xb5_bag_node.elixir_slice(&1, &2, &3, bag_size, root)}
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def reduce(%Xb5.Bag{root: root}, acc, fun) do
       :xb5_bag_node.elixir_reduce(fun, acc, root)
     end
@@ -921,6 +925,7 @@ defmodule Xb5.Bag do
   ## Protocols - Collectable
 
   defimpl Collectable do
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def into(%@for{} = bag) do
       fun = fn
         list, {:cont, x} -> [x | list]
@@ -938,9 +943,10 @@ defmodule Xb5.Bag do
     import Inspect.Algebra
 
     unless Version.match?(System.version(), "~> 1.19") do
-      def to_doc_with_opts(term, opts), do: to_doc(term, opts)
+      defp to_doc_with_opts(term, opts), do: to_doc(term, opts)
     end
 
+    # credo:disable-for-next-line Credo.Check.Readability.Specs
     def inspect(bag, %Inspect.Opts{} = opts) do
       {doc, %{limit: limit}} =
         bag
