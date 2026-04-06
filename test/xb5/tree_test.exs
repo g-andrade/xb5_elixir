@@ -383,30 +383,34 @@ defmodule Xb5TreeTest do
   end
 
   # ---------------------------------------------------------------------------
-  # Smaller and Larger
+  # first/last/lower/higher
   # ---------------------------------------------------------------------------
 
-  describe "smallest!/largest!" do
-    test "smallest! returns the pair with the smallest key; raises on empty" do
+  describe "first" do
+    test "returns nil default on empty tree, returns first entry otherwise" do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
         if size == 0 do
-          assert_raise ArgumentError, fn -> Xb5.Tree.smallest!(tree) end
+          assert Xb5.Tree.first(tree) == nil
+          assert Xb5.Tree.first(tree, :empty) == :empty
         else
           {expected_key, expected_value} = hd(ref_kvs)
-          {actual_key, actual_value} = Xb5.Tree.smallest!(tree)
+          {actual_key, actual_value} = Xb5.Tree.first(tree)
           assert TTU.canon_key(actual_key) == TTU.canon_key(expected_key)
           assert actual_value == expected_value
+          assert Xb5.Tree.first(tree, :empty) == Xb5.Tree.first(tree)
         end
       end)
     end
+  end
 
-    test "largest! returns the pair with the largest key; raises on empty" do
+  describe "first!" do
+    test "raises on empty tree, returns first entry otherwise" do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
         if size == 0 do
-          assert_raise ArgumentError, fn -> Xb5.Tree.largest!(tree) end
+          assert_raise Enum.EmptyError, fn -> Xb5.Tree.first!(tree) end
         else
-          {expected_key, expected_value} = List.last(ref_kvs)
-          {actual_key, actual_value} = Xb5.Tree.largest!(tree)
+          {expected_key, expected_value} = hd(ref_kvs)
+          {actual_key, actual_value} = Xb5.Tree.first!(tree)
           assert TTU.canon_key(actual_key) == TTU.canon_key(expected_key)
           assert actual_value == expected_value
         end
@@ -414,34 +418,66 @@ defmodule Xb5TreeTest do
     end
   end
 
-  describe "smaller" do
+  describe "last" do
+    test "returns nil default on empty tree, returns last entry otherwise" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size == 0 do
+          assert Xb5.Tree.last(tree) == nil
+          assert Xb5.Tree.last(tree, :empty) == :empty
+        else
+          {expected_key, expected_value} = List.last(ref_kvs)
+          {actual_key, actual_value} = Xb5.Tree.last(tree)
+          assert TTU.canon_key(actual_key) == TTU.canon_key(expected_key)
+          assert actual_value == expected_value
+          assert Xb5.Tree.last(tree, :empty) == Xb5.Tree.last(tree)
+        end
+      end)
+    end
+  end
+
+  describe "last!" do
+    test "raises on empty tree, returns last entry otherwise" do
+      TTU.foreach_test_tree(fn size, ref_kvs, tree ->
+        if size == 0 do
+          assert_raise Enum.EmptyError, fn -> Xb5.Tree.last!(tree) end
+        else
+          {expected_key, expected_value} = List.last(ref_kvs)
+          {actual_key, actual_value} = Xb5.Tree.last!(tree)
+          assert TTU.canon_key(actual_key) == TTU.canon_key(expected_key)
+          assert actual_value == expected_value
+        end
+      end)
+    end
+  end
+
+  describe "lower" do
     test "returns the largest pair with key strictly less than given" do
       TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
-        run_smaller(ref_kvs, tree)
+        run_lower(ref_kvs, tree)
       end)
     end
   end
 
-  describe "larger" do
+  describe "higher" do
     test "returns the smallest pair with key strictly greater than given" do
       TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
-        run_larger(ref_kvs, tree)
+        run_higher(ref_kvs, tree)
       end)
     end
   end
 
-  describe "pop_smallest!" do
-    test "repeatedly removes and returns the smallest pair" do
+  describe "pop_first!" do
+    test "repeatedly removes and returns the first pair" do
       TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
-        run_pop_smallest(ref_kvs, tree)
+        run_pop_first(ref_kvs, tree)
       end)
     end
   end
 
-  describe "pop_largest!" do
-    test "repeatedly removes and returns the largest pair" do
+  describe "pop_last!" do
+    test "repeatedly removes and returns the last pair" do
       TTU.foreach_test_tree(fn _size, ref_kvs, tree ->
-        run_pop_largest(Enum.reverse(ref_kvs), tree)
+        run_pop_last(Enum.reverse(ref_kvs), tree)
       end)
     end
   end
@@ -1268,38 +1304,38 @@ defmodule Xb5TreeTest do
   end
 
   # ---------------------------------------------------------------------------
-  # smaller / larger helpers
+  # lower / higher helpers
   # ---------------------------------------------------------------------------
 
-  defp run_smaller(ref_kvs, tree) do
+  defp run_lower(ref_kvs, tree) do
     case ref_kvs do
       [] ->
         key = TU.new_element()
-        assert Xb5.Tree.smaller(tree, key) == :error
+        assert Xb5.Tree.lower(tree, key) == :error
 
       [{single_key, single_value}] ->
-        assert Xb5.Tree.smaller(tree, TU.randomly_switch_number_type(single_key)) == :error
+        assert Xb5.Tree.lower(tree, TU.randomly_switch_number_type(single_key)) == :error
 
         larger_key = TU.element_larger(single_key)
-        {ak, av} = Xb5.Tree.smaller(tree, larger_key)
+        {ak, av} = Xb5.Tree.lower(tree, larger_key)
         assert TTU.canon_key(ak) == TTU.canon_key(single_key)
         assert av == single_value
 
         smaller_key = TU.element_smaller(single_key)
-        assert Xb5.Tree.smaller(tree, smaller_key) == :error
+        assert Xb5.Tree.lower(tree, smaller_key) == :error
 
       [{first_key, first_value} | next] ->
-        assert Xb5.Tree.smaller(tree, TU.randomly_switch_number_type(first_key)) == :error
+        assert Xb5.Tree.lower(tree, TU.randomly_switch_number_type(first_key)) == :error
 
         smaller_key = TU.element_smaller(first_key)
-        assert Xb5.Tree.smaller(tree, smaller_key) == :error
+        assert Xb5.Tree.lower(tree, smaller_key) == :error
 
-        run_smaller_recur(first_key, first_value, next, tree)
+        run_lower_recur(first_key, first_value, next, tree)
     end
   end
 
-  defp run_smaller_recur(expected_key, expected_value, [{last_key, last_value}], tree) do
-    result = Xb5.Tree.smaller(tree, TU.randomly_switch_number_type(last_key))
+  defp run_lower_recur(expected_key, expected_value, [{last_key, last_value}], tree) do
+    result = Xb5.Tree.lower(tree, TU.randomly_switch_number_type(last_key))
     assert result != :error
     {rk, rv} = result
     assert TTU.canon_key(rk) == TTU.canon_key(expected_key)
@@ -1307,15 +1343,15 @@ defmodule Xb5TreeTest do
 
     larger_key = TU.element_larger(last_key)
     assert larger_key > last_key
-    result2 = Xb5.Tree.smaller(tree, larger_key)
+    result2 = Xb5.Tree.lower(tree, larger_key)
     assert result2 != :error
     {rk2, rv2} = result2
     assert TTU.canon_key(rk2) == TTU.canon_key(last_key)
     assert rv2 == last_value
   end
 
-  defp run_smaller_recur(expected_key, expected_value, [{key, value} | next], tree) do
-    result = Xb5.Tree.smaller(tree, TU.randomly_switch_number_type(key))
+  defp run_lower_recur(expected_key, expected_value, [{key, value} | next], tree) do
+    result = Xb5.Tree.lower(tree, TU.randomly_switch_number_type(key))
     assert result != :error
     {rk, rv} = result
     assert TTU.canon_key(rk) == TTU.canon_key(expected_key)
@@ -1325,7 +1361,7 @@ defmodule Xb5TreeTest do
       {:found, in_between} ->
         assert in_between > expected_key
         assert in_between < key
-        result2 = Xb5.Tree.smaller(tree, in_between)
+        result2 = Xb5.Tree.lower(tree, in_between)
         assert result2 != :error
         {rk2, rv2} = result2
         assert TTU.canon_key(rk2) == TTU.canon_key(expected_key)
@@ -1335,42 +1371,42 @@ defmodule Xb5TreeTest do
         :ok
     end
 
-    run_smaller_recur(key, value, next, tree)
+    run_lower_recur(key, value, next, tree)
   end
 
   # ---------------------------------------------------------------------------
 
-  defp run_larger(ref_kvs, tree) do
+  defp run_higher(ref_kvs, tree) do
     case Enum.reverse(ref_kvs) do
       [] ->
         key = TU.new_element()
-        assert Xb5.Tree.larger(tree, key) == :error
+        assert Xb5.Tree.higher(tree, key) == :error
 
       [{single_key, single_value}] ->
-        assert Xb5.Tree.larger(tree, TU.randomly_switch_number_type(single_key)) == :error
+        assert Xb5.Tree.higher(tree, TU.randomly_switch_number_type(single_key)) == :error
 
         larger_key = TU.element_larger(single_key)
-        assert Xb5.Tree.larger(tree, larger_key) == :error
+        assert Xb5.Tree.higher(tree, larger_key) == :error
 
         smaller_key = TU.element_smaller(single_key)
-        result = Xb5.Tree.larger(tree, smaller_key)
+        result = Xb5.Tree.higher(tree, smaller_key)
         assert result != :error
         {rk, rv} = result
         assert TTU.canon_key(rk) == TTU.canon_key(single_key)
         assert rv == single_value
 
       [{last_key, last_value} | next] ->
-        assert Xb5.Tree.larger(tree, TU.randomly_switch_number_type(last_key)) == :error
+        assert Xb5.Tree.higher(tree, TU.randomly_switch_number_type(last_key)) == :error
 
         larger_key = TU.element_larger(last_key)
-        assert Xb5.Tree.larger(tree, larger_key) == :error
+        assert Xb5.Tree.higher(tree, larger_key) == :error
 
-        run_larger_recur(last_key, last_value, next, tree)
+        run_higher_recur(last_key, last_value, next, tree)
     end
   end
 
-  defp run_larger_recur(expected_key, expected_value, [{first_key, first_value}], tree) do
-    result = Xb5.Tree.larger(tree, TU.randomly_switch_number_type(first_key))
+  defp run_higher_recur(expected_key, expected_value, [{first_key, first_value}], tree) do
+    result = Xb5.Tree.higher(tree, TU.randomly_switch_number_type(first_key))
     assert result != :error
     {rk, rv} = result
     assert TTU.canon_key(rk) == TTU.canon_key(expected_key)
@@ -1378,15 +1414,15 @@ defmodule Xb5TreeTest do
 
     smaller_key = TU.element_smaller(first_key)
     assert smaller_key < first_key
-    result2 = Xb5.Tree.larger(tree, smaller_key)
+    result2 = Xb5.Tree.higher(tree, smaller_key)
     assert result2 != :error
     {rk2, rv2} = result2
     assert TTU.canon_key(rk2) == TTU.canon_key(first_key)
     assert rv2 == first_value
   end
 
-  defp run_larger_recur(expected_key, expected_value, [{key, value} | next], tree) do
-    result = Xb5.Tree.larger(tree, TU.randomly_switch_number_type(key))
+  defp run_higher_recur(expected_key, expected_value, [{key, value} | next], tree) do
+    result = Xb5.Tree.higher(tree, TU.randomly_switch_number_type(key))
     assert result != :error
     {rk, rv} = result
     assert TTU.canon_key(rk) == TTU.canon_key(expected_key)
@@ -1396,7 +1432,7 @@ defmodule Xb5TreeTest do
       {:found, in_between} ->
         assert in_between < expected_key
         assert in_between > key
-        result2 = Xb5.Tree.larger(tree, in_between)
+        result2 = Xb5.Tree.higher(tree, in_between)
         assert result2 != :error
         {rk2, rv2} = result2
         assert TTU.canon_key(rk2) == TTU.canon_key(expected_key)
@@ -1406,33 +1442,33 @@ defmodule Xb5TreeTest do
         :ok
     end
 
-    run_larger_recur(key, value, next, tree)
+    run_higher_recur(key, value, next, tree)
   end
 
   # ---------------------------------------------------------------------------
 
-  defp run_pop_smallest([{expected_key, expected_value} | next], tree) do
-    {taken_key, taken_value, tree2} = Xb5.Tree.pop_smallest!(tree)
+  defp run_pop_first([{expected_key, expected_value} | next], tree) do
+    {taken_key, taken_value, tree2} = Xb5.Tree.pop_first!(tree)
     assert TTU.canon_key(taken_key) == TTU.canon_key(expected_key)
     assert taken_value == expected_value
     assert Xb5.Tree.size(tree2) == length(next)
-    run_pop_smallest(next, tree2)
+    run_pop_first(next, tree2)
   end
 
-  defp run_pop_smallest([], tree) do
-    assert_raise ArgumentError, fn -> Xb5.Tree.pop_smallest!(tree) end
+  defp run_pop_first([], tree) do
+    assert_raise Enum.EmptyError, fn -> Xb5.Tree.pop_first!(tree) end
   end
 
-  defp run_pop_largest([{expected_key, expected_value} | next], tree) do
-    {taken_key, taken_value, tree2} = Xb5.Tree.pop_largest!(tree)
+  defp run_pop_last([{expected_key, expected_value} | next], tree) do
+    {taken_key, taken_value, tree2} = Xb5.Tree.pop_last!(tree)
     assert TTU.canon_key(taken_key) == TTU.canon_key(expected_key)
     assert taken_value == expected_value
     assert Xb5.Tree.size(tree2) == length(next)
-    run_pop_largest(next, tree2)
+    run_pop_last(next, tree2)
   end
 
-  defp run_pop_largest([], tree) do
-    assert_raise ArgumentError, fn -> Xb5.Tree.pop_largest!(tree) end
+  defp run_pop_last([], tree) do
+    assert_raise Enum.EmptyError, fn -> Xb5.Tree.pop_last!(tree) end
   end
 
   # ---------------------------------------------------------------------------

@@ -39,13 +39,13 @@ iex> set = Xb5.Set.new([3, 1, 2, 1])
 Xb5.Set.new([1, 2, 3])
 iex> Xb5.Set.member?(set, 2)
 true
-iex> Xb5.Set.smallest!(set)
+iex> Xb5.Set.first!(set)
 1
-iex> Xb5.Set.largest!(set)
+iex> Xb5.Set.last!(set)
 3
-iex> Xb5.Set.smaller(set, 2)
+iex> Xb5.Set.lower(set, 2)
 {:ok, 1}
-iex> Xb5.Set.larger(set, 2)
+iex> Xb5.Set.higher(set, 2)
 {:ok, 3}
 ```
 
@@ -71,17 +71,17 @@ iex> Xb5.Tree.get(tree, :a)
 1
 iex> Xb5.Tree.fetch(tree, :d)
 :error
-iex> Xb5.Tree.smallest!(tree)
+iex> Xb5.Tree.first!(tree)
 {:a, 1}
-iex> Xb5.Tree.largest!(tree)
+iex> Xb5.Tree.last!(tree)
 {:c, 3}
 iex> tree = Xb5.Tree.put(tree, :d, 4)
 Xb5.Tree.new([a: 1, b: 2, c: 3, d: 4])
 iex> Xb5.Tree.keys(tree)
 [:a, :b, :c, :d]
-iex> Xb5.Tree.smaller(tree, :c)
+iex> Xb5.Tree.lower(tree, :c)
 {:b, 2}
-iex> Xb5.Tree.larger(tree, :b)
+iex> Xb5.Tree.higher(tree, :b)
 {:c, 3}
 ```
 

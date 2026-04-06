@@ -11,9 +11,10 @@ defmodule Xb5.Tree do
   `update/4`, `merge/2`, and so on — and additionally offers O(log n) access to ordered
   extremes and neighbors:
 
-    * `largest!/1`, `smallest!/1` — retrieve the entry with the max/min key.
-    * `larger/2`, `smaller/2` — find the nearest entry above or below a given key.
-    * `pop_largest!/1`, `pop_smallest!/1` — remove and return endpoint entries.
+    * `first/2`, `last/2` — return the min/max entry, or a default.
+    * `first!/1`, `last!/1` — return the min/max entry, raising on empty.
+    * `higher/2`, `lower/2` — find the nearest entry above or below a given key.
+    * `pop_first!/1`, `pop_last!/1` — remove and return endpoint entries.
 
   Conversion to a sorted list of `{key, value}` pairs via `to_list/1` always yields
   entries in ascending key order.
@@ -30,7 +31,7 @@ defmodule Xb5.Tree do
       Xb5.Tree.new([a: 1, b: 2])
       iex> Xb5.Tree.get(tree, :a)
       1
-      iex> Xb5.Tree.largest!(tree)
+      iex> Xb5.Tree.last!(tree)
       {:b, 2}
 
   """
@@ -171,6 +172,44 @@ defmodule Xb5.Tree do
   @spec filter(t(key, value), ({key, value} -> as_boolean(term()))) :: t(key, value)
   def filter(tree, fun) do
     from_orddict(for pair <- to_list(tree), fun.(pair), do: pair)
+  end
+
+  @doc """
+  Returns the first (smallest-key) entry in `tree` as `{key, value}`, or `default` if empty.
+
+  ## Examples
+
+      iex> Xb5.Tree.first(Xb5.Tree.new([a: 1, b: 2, c: 3]))
+      {:a, 1}
+      iex> Xb5.Tree.first(Xb5.Tree.new())
+      nil
+      iex> Xb5.Tree.first(Xb5.Tree.new(), :empty)
+      :empty
+
+  """
+  @spec first(t(key, value), default) :: {key, value} | default when default: term()
+  def first(tree, default \\ nil)
+
+  def first(%__MODULE__{size: size, root: root}, default) do
+    if size === 0, do: default, else: :xb5_trees_node.smallest(root)
+  end
+
+  @doc """
+  Returns the first (smallest-key) entry in `tree` as `{key, value}`.
+
+  Raises `Enum.EmptyError` if `tree` is empty.
+
+  ## Examples
+
+      iex> Xb5.Tree.first!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
+      {:a, 1}
+      iex> Xb5.Tree.first!(Xb5.Tree.new())
+      ** (Enum.EmptyError) empty error
+
+  """
+  @spec first!(t(key, value)) :: {key, value}
+  def first!(%__MODULE__{size: size, root: root}) do
+    if size === 0, do: raise(Enum.EmptyError), else: :xb5_trees_node.smallest(root)
   end
 
   @doc """
@@ -384,6 +423,28 @@ defmodule Xb5.Tree do
   end
 
   @doc """
+  Returns the entry immediately following `key` in `tree` as `{next_key, value}`.
+
+  If `tree` contains an entry with a key strictly greater than `key`, it is returned.
+  Otherwise returns `:error`.
+
+  ## Examples
+
+      iex> Xb5.Tree.higher(Xb5.Tree.new([a: 1, b: 2, c: 3]), :b)
+      {:c, 3}
+      iex> Xb5.Tree.higher(Xb5.Tree.new([a: 1, b: 2, c: 3]), :c)
+      :error
+
+  """
+  @spec higher(t(key, value), key) :: {key, value} | :error
+  def higher(%__MODULE__{root: root}, key) do
+    case :xb5_trees_node.larger(key, root) do
+      {_, _} = found -> found
+      :none -> :error
+    end
+  end
+
+  @doc """
   Intersects two trees, returning a tree with the common keys.
 
   The values in the returned tree are the values of the intersected keys in `tree2`.
@@ -438,46 +499,62 @@ defmodule Xb5.Tree do
   end
 
   @doc """
-  Returns the entry immediately following `key` in `tree`.
-
-  If `tree` contains an entry with a key strictly greater than `key`, it is returned as
-  `{next_key, value}`. Otherwise returns `:error`.
+  Returns the last (largest-key) entry in `tree` as `{key, value}`, or `default` if empty.
 
   ## Examples
 
-      iex> Xb5.Tree.larger(Xb5.Tree.new([a: 1, b: 2, c: 3]), :b)
+      iex> Xb5.Tree.last(Xb5.Tree.new([a: 1, b: 2, c: 3]))
       {:c, 3}
-      iex> Xb5.Tree.larger(Xb5.Tree.new([a: 1, b: 2, c: 3]), :c)
-      :error
+      iex> Xb5.Tree.last(Xb5.Tree.new())
+      nil
+      iex> Xb5.Tree.last(Xb5.Tree.new(), :empty)
+      :empty
 
   """
-  @spec larger(t(key, value), key) :: {key, value} | :error
-  def larger(%__MODULE__{root: root}, key) do
-    case :xb5_trees_node.larger(key, root) do
-      {_, _} = found -> found
-      :none -> :error
-    end
+  @spec last(t(key, value), default) :: {key, value} | default when default: term()
+  def last(tree, default \\ nil)
+
+  def last(%__MODULE__{size: size, root: root}, default) do
+    if size === 0, do: default, else: :xb5_trees_node.largest(root)
   end
 
   @doc """
-  Returns the entry with the largest key in `tree`.
+  Returns the last (largest-key) entry in `tree` as `{key, value}`.
 
-  Raises `ArgumentError` if `tree` is empty.
+  Raises `Enum.EmptyError` if `tree` is empty.
 
   ## Examples
 
-      iex> Xb5.Tree.largest!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
+      iex> Xb5.Tree.last!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
       {:c, 3}
-      iex> Xb5.Tree.largest!(Xb5.Tree.new([]))
-      ** (ArgumentError) tree is empty
+      iex> Xb5.Tree.last!(Xb5.Tree.new())
+      ** (Enum.EmptyError) empty error
 
   """
-  @spec largest!(t(key, value)) :: {key, value}
-  def largest!(%__MODULE__{size: size, root: root}) do
-    if size === 0 do
-      raise ArgumentError, "tree is empty"
-    else
-      :xb5_trees_node.largest(root)
+  @spec last!(t(key, value)) :: {key, value}
+  def last!(%__MODULE__{size: size, root: root}) do
+    if size === 0, do: raise(Enum.EmptyError), else: :xb5_trees_node.largest(root)
+  end
+
+  @doc """
+  Returns the entry immediately preceding `key` in `tree` as `{prev_key, value}`.
+
+  If `tree` contains an entry with a key strictly less than `key`, it is returned.
+  Otherwise returns `:error`.
+
+  ## Examples
+
+      iex> Xb5.Tree.lower(Xb5.Tree.new([a: 1, b: 2, c: 3]), :b)
+      {:a, 1}
+      iex> Xb5.Tree.lower(Xb5.Tree.new([a: 1, b: 2, c: 3]), :a)
+      :error
+
+  """
+  @spec lower(t(key, value), key) :: {key, value} | :error
+  def lower(%__MODULE__{root: root}, key) do
+    case :xb5_trees_node.smaller(key, root) do
+      {_, _} = found -> found
+      :none -> :error
     end
   end
 
@@ -673,22 +750,46 @@ defmodule Xb5.Tree do
   end
 
   @doc """
-  Removes and returns `{key, value, updated_tree}` for the entry with the largest key.
+  Removes and returns `{key, value, updated_tree}` for the entry with the first (smallest) key.
 
-  Raises `ArgumentError` if `tree` is empty.
+  Raises `Enum.EmptyError` if `tree` is empty.
 
   ## Examples
 
-      iex> Xb5.Tree.pop_largest!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
-      {:c, 3, Xb5.Tree.new([a: 1, b: 2])}
-      iex> Xb5.Tree.pop_largest!(Xb5.Tree.new([]))
-      ** (ArgumentError) tree is empty
+      iex> Xb5.Tree.pop_first!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
+      {:a, 1, Xb5.Tree.new([b: 2, c: 3])}
+      iex> Xb5.Tree.pop_first!(Xb5.Tree.new())
+      ** (Enum.EmptyError) empty error
 
   """
-  @spec pop_largest!(t(key, value)) :: {key, value, t(key, value)}
-  def pop_largest!(%__MODULE__{size: size, root: root} = tree) do
+  @spec pop_first!(t(key, value)) :: {key, value, t(key, value)}
+  def pop_first!(%__MODULE__{size: size, root: root} = tree) do
     if size === 0 do
-      raise ArgumentError, "tree is empty"
+      raise Enum.EmptyError
+    else
+      [[key | value] | root] = :xb5_trees_node.take_smallest(root)
+      tree = %{tree | size: size - 1, root: root}
+      {key, value, tree}
+    end
+  end
+
+  @doc """
+  Removes and returns `{key, value, updated_tree}` for the entry with the last (largest) key.
+
+  Raises `Enum.EmptyError` if `tree` is empty.
+
+  ## Examples
+
+      iex> Xb5.Tree.pop_last!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
+      {:c, 3, Xb5.Tree.new([a: 1, b: 2])}
+      iex> Xb5.Tree.pop_last!(Xb5.Tree.new())
+      ** (Enum.EmptyError) empty error
+
+  """
+  @spec pop_last!(t(key, value)) :: {key, value, t(key, value)}
+  def pop_last!(%__MODULE__{size: size, root: root} = tree) do
+    if size === 0 do
+      raise Enum.EmptyError
     else
       [[key | value] | root] = :xb5_trees_node.take_largest(root)
       tree = %{tree | size: size - 1, root: root}
@@ -730,30 +831,6 @@ defmodule Xb5.Tree do
       :badkey ->
         value = fun.()
         {value, tree}
-    end
-  end
-
-  @doc """
-  Removes and returns `{key, value, updated_tree}` for the entry with the smallest key.
-
-  Raises `ArgumentError` if `tree` is empty.
-
-  ## Examples
-
-      iex> Xb5.Tree.pop_smallest!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
-      {:a, 1, Xb5.Tree.new([b: 2, c: 3])}
-      iex> Xb5.Tree.pop_smallest!(Xb5.Tree.new([]))
-      ** (ArgumentError) tree is empty
-
-  """
-  @spec pop_smallest!(t(key, value)) :: {key, value, t(key, value)}
-  def pop_smallest!(%__MODULE__{size: size, root: root} = tree) do
-    if size === 0 do
-      raise ArgumentError, "tree is empty"
-    else
-      [[key | value] | root] = :xb5_trees_node.take_smallest(root)
-      tree = %{tree | size: size - 1, root: root}
-      {key, value, tree}
     end
   end
 
@@ -939,50 +1016,6 @@ defmodule Xb5.Tree do
   @spec size(t()) :: non_neg_integer()
   def size(%__MODULE__{size: size}) do
     size
-  end
-
-  @doc """
-  Returns the entry immediately preceding `key` in `tree`.
-
-  If `tree` contains an entry with a key strictly less than `key`, it is returned as
-  `{prev_key, value}`. Otherwise returns `:error`.
-
-  ## Examples
-
-      iex> Xb5.Tree.smaller(Xb5.Tree.new([a: 1, b: 2, c: 3]), :b)
-      {:a, 1}
-      iex> Xb5.Tree.smaller(Xb5.Tree.new([a: 1, b: 2, c: 3]), :a)
-      :error
-
-  """
-  @spec smaller(t(key, value), value) :: {key, value} | :error
-  def smaller(%__MODULE__{root: root}, element) do
-    case :xb5_trees_node.smaller(element, root) do
-      {_, _} = found -> found
-      :none -> :error
-    end
-  end
-
-  @doc """
-  Returns the entry with the smallest key in `tree`.
-
-  Raises `ArgumentError` if `tree` is empty.
-
-  ## Examples
-
-      iex> Xb5.Tree.smallest!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
-      {:a, 1}
-      iex> Xb5.Tree.smallest!(Xb5.Tree.new([]))
-      ** (ArgumentError) tree is empty
-
-  """
-  @spec smallest!(t(key, value)) :: {key, value}
-  def smallest!(%__MODULE__{size: size, root: root}) do
-    if size === 0 do
-      raise ArgumentError, "tree is empty"
-    else
-      :xb5_trees_node.smallest(root)
-    end
   end
 
   @doc """

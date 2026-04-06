@@ -143,61 +143,89 @@ defmodule Xb5SetTest do
   end
 
   # ---------------------------------------------------------------------------
-  # Smaller and Larger
+  # first/last/lower/higher
   # ---------------------------------------------------------------------------
 
-  describe "smallest!" do
-    test "raises on empty set, returns smallest element otherwise" do
+  describe "first" do
+    test "returns nil default on empty set, returns first element otherwise" do
       STU.foreach_test_set(fn
         0, _ref_elements, set ->
-          assert_raise ArgumentError, fn -> Xb5.Set.smallest!(set) end
+          assert Xb5.Set.first(set) == nil
+          assert Xb5.Set.first(set, :empty) == :empty
 
         _size, ref_elements, set ->
-          assert Xb5.Set.smallest!(set) == hd(ref_elements)
+          assert Xb5.Set.first(set) == hd(ref_elements)
+          assert Xb5.Set.first(set, :empty) == hd(ref_elements)
       end)
     end
   end
 
-  describe "largest!" do
-    test "raises on empty set, returns largest element otherwise" do
+  describe "first!" do
+    test "raises on empty set, returns first element otherwise" do
       STU.foreach_test_set(fn
         0, _ref_elements, set ->
-          assert_raise ArgumentError, fn -> Xb5.Set.largest!(set) end
+          assert_raise Enum.EmptyError, fn -> Xb5.Set.first!(set) end
 
         _size, ref_elements, set ->
-          assert Xb5.Set.largest!(set) == List.last(ref_elements)
+          assert Xb5.Set.first!(set) == hd(ref_elements)
       end)
     end
   end
 
-  describe "smaller" do
+  describe "last" do
+    test "returns nil default on empty set, returns last element otherwise" do
+      STU.foreach_test_set(fn
+        0, _ref_elements, set ->
+          assert Xb5.Set.last(set) == nil
+          assert Xb5.Set.last(set, :empty) == :empty
+
+        _size, ref_elements, set ->
+          assert Xb5.Set.last(set) == List.last(ref_elements)
+          assert Xb5.Set.last(set, :empty) == List.last(ref_elements)
+      end)
+    end
+  end
+
+  describe "last!" do
+    test "raises on empty set, returns last element otherwise" do
+      STU.foreach_test_set(fn
+        0, _ref_elements, set ->
+          assert_raise Enum.EmptyError, fn -> Xb5.Set.last!(set) end
+
+        _size, ref_elements, set ->
+          assert Xb5.Set.last!(set) == List.last(ref_elements)
+      end)
+    end
+  end
+
+  describe "lower" do
     test "returns the nearest element strictly below the query, or :error" do
       STU.foreach_test_set(fn _size, ref_elements, set ->
-        run_smaller(ref_elements, set)
+        run_lower(ref_elements, set)
       end)
     end
   end
 
-  describe "larger" do
+  describe "higher" do
     test "returns the nearest element strictly above the query, or :error" do
       STU.foreach_test_set(fn _size, ref_elements, set ->
-        run_larger(ref_elements, set)
+        run_higher(ref_elements, set)
       end)
     end
   end
 
-  describe "pop_smallest!" do
-    test "raises on empty set, repeatedly pops smallest element in order" do
+  describe "pop_first!" do
+    test "raises on empty set, repeatedly pops first element in order" do
       STU.foreach_test_set(fn _size, ref_elements, set ->
-        run_pop_smallest(ref_elements, set)
+        run_pop_first(ref_elements, set)
       end)
     end
   end
 
-  describe "pop_largest!" do
-    test "raises on empty set, repeatedly pops largest element in order" do
+  describe "pop_last!" do
+    test "raises on empty set, repeatedly pops last element in order" do
       STU.foreach_test_set(fn _size, ref_elements, set ->
-        run_pop_largest(Enum.reverse(ref_elements), set)
+        run_pop_last(Enum.reverse(ref_elements), set)
       end)
     end
   end
@@ -461,129 +489,129 @@ defmodule Xb5SetTest do
 
   # -----
 
-  defp run_smaller([], set) do
+  defp run_lower([], set) do
     elem = TU.new_element()
-    assert Xb5.Set.smaller(set, elem) == :error
+    assert Xb5.Set.lower(set, elem) == :error
   end
 
-  defp run_smaller([single], set) do
-    assert Xb5.Set.smaller(set, TU.randomly_switch_number_type(single)) == :error
+  defp run_lower([single], set) do
+    assert Xb5.Set.lower(set, TU.randomly_switch_number_type(single)) == :error
 
     larger = TU.element_larger(single)
-    assert Xb5.Set.smaller(set, larger) == {:ok, single}
+    assert Xb5.Set.lower(set, larger) == {:ok, single}
 
     smaller = TU.element_smaller(single)
-    assert Xb5.Set.smaller(set, smaller) == :error
+    assert Xb5.Set.lower(set, smaller) == :error
   end
 
-  defp run_smaller([first | next], set) do
-    assert Xb5.Set.smaller(set, TU.randomly_switch_number_type(first)) == :error
+  defp run_lower([first | next], set) do
+    assert Xb5.Set.lower(set, TU.randomly_switch_number_type(first)) == :error
 
     smaller = TU.element_smaller(first)
-    assert Xb5.Set.smaller(set, smaller) == :error
+    assert Xb5.Set.lower(set, smaller) == :error
 
-    run_smaller_recur(first, next, set)
+    run_lower_recur(first, next, set)
   end
 
-  defp run_smaller_recur(expected, [last], set) do
-    result = Xb5.Set.smaller(set, TU.randomly_switch_number_type(last))
+  defp run_lower_recur(expected, [last], set) do
+    result = Xb5.Set.lower(set, TU.randomly_switch_number_type(last))
     assert result == {:ok, expected}
 
     larger = TU.element_larger(last)
     assert larger > last
-    assert Xb5.Set.smaller(set, larger) == {:ok, last}
+    assert Xb5.Set.lower(set, larger) == {:ok, last}
   end
 
-  defp run_smaller_recur(expected, [elem | next], set) do
-    assert Xb5.Set.smaller(set, TU.randomly_switch_number_type(elem)) == {:ok, expected}
+  defp run_lower_recur(expected, [elem | next], set) do
+    assert Xb5.Set.lower(set, TU.randomly_switch_number_type(elem)) == {:ok, expected}
 
     case TU.element_in_between(expected, elem) do
       {:found, in_between} ->
         assert in_between > expected
         assert in_between < elem
-        assert Xb5.Set.smaller(set, in_between) == {:ok, expected}
+        assert Xb5.Set.lower(set, in_between) == {:ok, expected}
 
       :none ->
         :ok
     end
 
-    run_smaller_recur(elem, next, set)
+    run_lower_recur(elem, next, set)
   end
 
   # -----
 
-  defp run_larger(ref_elements, set) do
+  defp run_higher(ref_elements, set) do
     case Enum.reverse(ref_elements) do
       [] ->
         elem = TU.new_element()
-        assert Xb5.Set.larger(set, elem) == :error
+        assert Xb5.Set.higher(set, elem) == :error
 
       [single] ->
-        assert Xb5.Set.larger(set, single) == :error
+        assert Xb5.Set.higher(set, single) == :error
 
         larger = TU.element_larger(single)
-        assert Xb5.Set.larger(set, larger) == :error
+        assert Xb5.Set.higher(set, larger) == :error
 
         smaller = TU.element_smaller(single)
-        assert Xb5.Set.larger(set, smaller) == {:ok, single}
+        assert Xb5.Set.higher(set, smaller) == {:ok, single}
 
       [last | next] ->
-        assert Xb5.Set.larger(set, TU.randomly_switch_number_type(last)) == :error
+        assert Xb5.Set.higher(set, TU.randomly_switch_number_type(last)) == :error
 
         larger = TU.element_larger(last)
-        assert Xb5.Set.larger(set, larger) == :error
+        assert Xb5.Set.higher(set, larger) == :error
 
-        run_larger_recur(last, next, set)
+        run_higher_recur(last, next, set)
     end
   end
 
-  defp run_larger_recur(expected, [first], set) do
-    result = Xb5.Set.larger(set, TU.randomly_switch_number_type(first))
+  defp run_higher_recur(expected, [first], set) do
+    result = Xb5.Set.higher(set, TU.randomly_switch_number_type(first))
     assert result == {:ok, expected}
 
     smaller = TU.element_smaller(first)
     assert smaller < first
-    assert Xb5.Set.larger(set, smaller) == {:ok, first}
+    assert Xb5.Set.higher(set, smaller) == {:ok, first}
   end
 
-  defp run_larger_recur(expected, [elem | next], set) do
-    assert Xb5.Set.larger(set, TU.randomly_switch_number_type(elem)) == {:ok, expected}
+  defp run_higher_recur(expected, [elem | next], set) do
+    assert Xb5.Set.higher(set, TU.randomly_switch_number_type(elem)) == {:ok, expected}
 
     case TU.element_in_between(elem, expected) do
       {:found, in_between} ->
         assert in_between < expected
         assert in_between > elem
-        assert Xb5.Set.larger(set, in_between) == {:ok, expected}
+        assert Xb5.Set.higher(set, in_between) == {:ok, expected}
 
       :none ->
         :ok
     end
 
-    run_larger_recur(elem, next, set)
+    run_higher_recur(elem, next, set)
   end
 
   # -----
 
-  defp run_pop_smallest([expected | next], set) do
-    {taken, set2} = Xb5.Set.pop_smallest!(set)
+  defp run_pop_first([expected | next], set) do
+    {taken, set2} = Xb5.Set.pop_first!(set)
     assert taken == expected
     assert Xb5.Set.size(set2) == length(next)
-    run_pop_smallest(next, set2)
+    run_pop_first(next, set2)
   end
 
-  defp run_pop_smallest([], set) do
-    assert_raise ArgumentError, fn -> Xb5.Set.pop_smallest!(set) end
+  defp run_pop_first([], set) do
+    assert_raise Enum.EmptyError, fn -> Xb5.Set.pop_first!(set) end
   end
 
-  defp run_pop_largest([expected | next], set) do
-    {taken, set2} = Xb5.Set.pop_largest!(set)
+  defp run_pop_last([expected | next], set) do
+    {taken, set2} = Xb5.Set.pop_last!(set)
     assert taken == expected
     assert Xb5.Set.size(set2) == length(next)
-    run_pop_largest(next, set2)
+    run_pop_last(next, set2)
   end
 
-  defp run_pop_largest([], set) do
-    assert_raise ArgumentError, fn -> Xb5.Set.pop_largest!(set) end
+  defp run_pop_last([], set) do
+    assert_raise Enum.EmptyError, fn -> Xb5.Set.pop_last!(set) end
   end
 
   # ---------------------------------------------------------------------------

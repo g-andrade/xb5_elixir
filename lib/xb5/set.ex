@@ -12,9 +12,10 @@ defmodule Xb5.Set do
   `difference/2`, `subset?/2`, and so on — and additionally offers O(log n) access to
   ordered extremes and neighbors:
 
-    * `largest!/1`, `smallest!/1` — retrieve the max/min element.
-    * `larger/2`, `smaller/2` — find the nearest element above or below a given value.
-    * `pop_largest!/1`, `pop_smallest!/1` — remove and return endpoint elements.
+    * `first/2`, `last/2` — return the min/max element, or a default.
+    * `first!/1`, `last!/1` — return the min/max element, raising on empty.
+    * `higher/2`, `lower/2` — find the nearest element above or below a given value.
+    * `pop_first!/1`, `pop_last!/1` — remove and return endpoint elements.
 
   Conversion to a sorted list via `to_list/1` always yields elements in ascending order.
 
@@ -30,7 +31,7 @@ defmodule Xb5.Set do
       Xb5.Set.new([1, 2, 3])
       iex> Xb5.Set.member?(set, 2)
       true
-      iex> Xb5.Set.largest!(set)
+      iex> Xb5.Set.last!(set)
       3
 
   """
@@ -145,6 +146,66 @@ defmodule Xb5.Set do
   end
 
   @doc """
+  Returns the first (smallest) element in `set`, or `default` if `set` is empty.
+
+  ## Examples
+
+      iex> Xb5.Set.first(Xb5.Set.new([1, 2, 3]))
+      1
+      iex> Xb5.Set.first(Xb5.Set.new())
+      nil
+      iex> Xb5.Set.first(Xb5.Set.new(), :empty)
+      :empty
+
+  """
+  @spec first(t(value), default) :: value | default when default: term()
+  def first(set, default \\ nil)
+
+  def first(%__MODULE__{size: size, root: root}, default) do
+    if size === 0, do: default, else: :xb5_sets_node.smallest(root)
+  end
+
+  @doc """
+  Returns the first (smallest) element in `set`.
+
+  Raises `Enum.EmptyError` if `set` is empty.
+
+  ## Examples
+
+      iex> Xb5.Set.first!(Xb5.Set.new([1, 2, 3]))
+      1
+      iex> Xb5.Set.first!(Xb5.Set.new())
+      ** (Enum.EmptyError) empty error
+
+  """
+  @spec first!(t(value)) :: value
+  def first!(%__MODULE__{size: size, root: root}) do
+    if size === 0, do: raise(Enum.EmptyError), else: :xb5_sets_node.smallest(root)
+  end
+
+  @doc """
+  Returns the immediate successor of `element` in `set`.
+
+  If `set` contains an element strictly greater than `element`, it is returned as
+  `{:ok, next}`. Otherwise returns `:error`.
+
+  ## Examples
+
+      iex> Xb5.Set.higher(Xb5.Set.new([1, 2, 3]), 2)
+      {:ok, 3}
+      iex> Xb5.Set.higher(Xb5.Set.new([1, 2, 3]), 3)
+      :error
+
+  """
+  @spec higher(t(value), value) :: {:ok, value} | :error
+  def higher(%__MODULE__{root: root}, element) do
+    case :xb5_sets_node.larger(element, root) do
+      {:found, e} -> {:ok, e}
+      :none -> :error
+    end
+  end
+
+  @doc """
   Returns a set containing only members that `set1` and `set2` have in common.
 
   ## Examples
@@ -163,46 +224,62 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns the immediate successor of `element` in `set`.
-
-  If `set` contains an element strictly greater than `element`, it is returned as
-  `{:ok, next}`. Otherwise returns `:error`.
+  Returns the last (largest) element in `set`, or `default` if `set` is empty.
 
   ## Examples
 
-      iex> Xb5.Set.larger(Xb5.Set.new([1, 2, 3]), 2)
-      {:ok, 3}
-      iex> Xb5.Set.larger(Xb5.Set.new([1, 2, 3]), 3)
-      :error
+      iex> Xb5.Set.last(Xb5.Set.new([1, 2, 3]))
+      3
+      iex> Xb5.Set.last(Xb5.Set.new())
+      nil
+      iex> Xb5.Set.last(Xb5.Set.new(), :empty)
+      :empty
 
   """
-  @spec larger(t(value), value) :: {:ok, value} | :error
-  def larger(%__MODULE__{root: root}, element) do
-    case :xb5_sets_node.larger(element, root) do
-      {:found, e} -> {:ok, e}
-      :none -> :error
-    end
+  @spec last(t(value), default) :: value | default when default: term()
+  def last(set, default \\ nil)
+
+  def last(%__MODULE__{size: size, root: root}, default) do
+    if size === 0, do: default, else: :xb5_sets_node.largest(root)
   end
 
   @doc """
-  Returns the largest element in `set`.
+  Returns the last (largest) element in `set`.
 
-  Raises `ArgumentError` if `set` is empty.
+  Raises `Enum.EmptyError` if `set` is empty.
 
   ## Examples
 
-      iex> Xb5.Set.largest!(Xb5.Set.new([1, 2, 3]))
+      iex> Xb5.Set.last!(Xb5.Set.new([1, 2, 3]))
       3
-      iex> Xb5.Set.largest!(Xb5.Set.new([]))
-      ** (ArgumentError) set is empty
+      iex> Xb5.Set.last!(Xb5.Set.new())
+      ** (Enum.EmptyError) empty error
 
   """
-  @spec largest!(t(value)) :: value
-  def largest!(%__MODULE__{size: size, root: root}) do
-    if size === 0 do
-      raise ArgumentError, "set is empty"
-    else
-      :xb5_sets_node.largest(root)
+  @spec last!(t(value)) :: value
+  def last!(%__MODULE__{size: size, root: root}) do
+    if size === 0, do: raise(Enum.EmptyError), else: :xb5_sets_node.largest(root)
+  end
+
+  @doc """
+  Returns the immediate predecessor of `element` in `set`.
+
+  If `set` contains an element strictly less than `element`, it is returned as
+  `{:ok, prev}`. Otherwise returns `:error`.
+
+  ## Examples
+
+      iex> Xb5.Set.lower(Xb5.Set.new([1, 2, 3]), 2)
+      {:ok, 1}
+      iex> Xb5.Set.lower(Xb5.Set.new([1, 2, 3]), 1)
+      :error
+
+  """
+  @spec lower(t(value), value) :: {:ok, value} | :error
+  def lower(%__MODULE__{root: root}, element) do
+    case :xb5_sets_node.smaller(element, root) do
+      {:found, e} -> {:ok, e}
+      :none -> :error
     end
   end
 
@@ -316,48 +393,48 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Removes and returns `{element, updated_set}` for the largest element in `set`.
+  Removes and returns `{element, updated_set}` for the first (smallest) element in `set`.
 
-  Raises `ArgumentError` if `set` is empty.
+  Raises `Enum.EmptyError` if `set` is empty.
 
   ## Examples
 
-      iex> Xb5.Set.pop_largest!(Xb5.Set.new([1, 2, 3]))
-      {3, Xb5.Set.new([1, 2])}
-      iex> Xb5.Set.pop_largest!(Xb5.Set.new([]))
-      ** (ArgumentError) set is empty
+      iex> Xb5.Set.pop_first!(Xb5.Set.new([1, 2, 3]))
+      {1, Xb5.Set.new([2, 3])}
+      iex> Xb5.Set.pop_first!(Xb5.Set.new())
+      ** (Enum.EmptyError) empty error
 
   """
-  @spec pop_largest!(t(value)) :: {value, t(value)}
-  def pop_largest!(%__MODULE__{size: size, root: root} = set) do
+  @spec pop_first!(t(value)) :: {value, t(value)}
+  def pop_first!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise ArgumentError, "set is empty"
+      raise Enum.EmptyError
     else
-      [value | root] = :xb5_sets_node.take_largest(root)
+      [value | root] = :xb5_sets_node.take_smallest(root)
       set = %{set | size: size - 1, root: root}
       {value, set}
     end
   end
 
   @doc """
-  Removes and returns `{element, updated_set}` for the smallest element in `set`.
+  Removes and returns `{element, updated_set}` for the last (largest) element in `set`.
 
-  Raises `ArgumentError` if `set` is empty.
+  Raises `Enum.EmptyError` if `set` is empty.
 
   ## Examples
 
-      iex> Xb5.Set.pop_smallest!(Xb5.Set.new([1, 2, 3]))
-      {1, Xb5.Set.new([2, 3])}
-      iex> Xb5.Set.pop_smallest!(Xb5.Set.new([]))
-      ** (ArgumentError) set is empty
+      iex> Xb5.Set.pop_last!(Xb5.Set.new([1, 2, 3]))
+      {3, Xb5.Set.new([1, 2])}
+      iex> Xb5.Set.pop_last!(Xb5.Set.new())
+      ** (Enum.EmptyError) empty error
 
   """
-  @spec pop_smallest!(t(value)) :: {value, t(value)}
-  def pop_smallest!(%__MODULE__{size: size, root: root} = set) do
+  @spec pop_last!(t(value)) :: {value, t(value)}
+  def pop_last!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise ArgumentError, "set is empty"
+      raise Enum.EmptyError
     else
-      [value | root] = :xb5_sets_node.take_smallest(root)
+      [value | root] = :xb5_sets_node.take_largest(root)
       set = %{set | size: size - 1, root: root}
       {value, set}
     end
@@ -374,7 +451,7 @@ defmodule Xb5.Set do
       Xb5.Set.new([1, 2, 3, 4])
 
   """
-  @spec(put(t(value), new_value) :: t(value | new_value) when new_value: value())
+  @spec put(t(value), new_value) :: t(value | new_value) when new_value: value()
   def put(%__MODULE__{size: size, root: root} = set, value) do
     case :xb5_sets_node.insert_att(value, root) do
       :key_exists ->
@@ -416,50 +493,6 @@ defmodule Xb5.Set do
   @spec size(t()) :: non_neg_integer()
   def size(%__MODULE__{size: size}) do
     size
-  end
-
-  @doc """
-  Returns the immediate predecessor of `element` in `set`.
-
-  If `set` contains an element strictly less than `element`, it is returned as
-  `{:ok, prev}`. Otherwise returns `:error`.
-
-  ## Examples
-
-      iex> Xb5.Set.smaller(Xb5.Set.new([1, 2, 3]), 2)
-      {:ok, 1}
-      iex> Xb5.Set.smaller(Xb5.Set.new([1, 2, 3]), 1)
-      :error
-
-  """
-  @spec smaller(t(value), value) :: {:ok, value} | :error
-  def smaller(%__MODULE__{root: root}, element) do
-    case :xb5_sets_node.smaller(element, root) do
-      {:found, e} -> {:ok, e}
-      :none -> :error
-    end
-  end
-
-  @doc """
-  Returns the smallest element in `set`.
-
-  Raises `ArgumentError` if `set` is empty.
-
-  ## Examples
-
-      iex> Xb5.Set.smallest!(Xb5.Set.new([1, 2, 3]))
-      1
-      iex> Xb5.Set.smallest!(Xb5.Set.new([]))
-      ** (ArgumentError) set is empty
-
-  """
-  @spec smallest!(t(value)) :: value
-  def smallest!(%__MODULE__{size: size, root: root}) do
-    if size === 0 do
-      raise ArgumentError, "set is empty"
-    else
-      :xb5_sets_node.smallest(root)
-    end
   end
 
   @doc """

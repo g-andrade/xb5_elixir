@@ -50,8 +50,11 @@ deps/xb5/          Erlang source — read before assuming the API
 - `filter/2` fun is wrapped for Elixir truthy semantics.
 - `map/2` on Set returns a new set (not a list); on Tree transforms values.
 - `symmetric_difference/2` implemented at Elixir level as `union(difference(a,b), difference(b,a))`.
-- Bang functions (`largest!/1`, `smallest!/1`, `pop_largest!/1`, `pop_smallest!/1`, `index_of!/2`, etc.)
-  raise `ArgumentError` on empty collections and `KeyError` on missing keys.
+- Endpoint functions: `first/2`, `last/2` return a default (nil) on empty; `first!/1`, `last!/1`
+  raise `Enum.EmptyError` on empty; `pop_first!/1`, `pop_last!/1` raise `Enum.EmptyError` on empty.
+- Neighbor functions: `lower/2`, `higher/2` return `{:ok, value}` / `:error` (Set/Bag) or
+  `{key, value}` / `:error` (Tree).
+- `index_of!/2` raises `KeyError` on missing keys.
 - `index_of/2`, `index_of!/2` are **0-based** (Elixir idiom).
 
 ### Bag-specific
