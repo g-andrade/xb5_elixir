@@ -219,10 +219,14 @@ defmodule Xb5.Bag do
   @doc """
   Returns the smallest element strictly greater than `value`, or `:error` if none exists.
 
+  `value` does not need to be a member of the bag.
+
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 2, 3])
       iex> Xb5.Bag.higher(bag, 1)
+      {:ok, 2}
+      iex> Xb5.Bag.higher(bag, 1.5)
       {:ok, 2}
       iex> Xb5.Bag.higher(bag, 3)
       :error
@@ -318,11 +322,15 @@ defmodule Xb5.Bag do
   @doc """
   Returns the largest element strictly less than `value`, or `:error` if none exists.
 
+  `value` does not need to be a member of the bag.
+
   ## Examples
 
       iex> bag = Xb5.Bag.new([1, 2, 3])
       iex> Xb5.Bag.lower(bag, 3)
       {:ok, 2}
+      iex> Xb5.Bag.lower(bag, 1.5)
+      {:ok, 1}
       iex> Xb5.Bag.lower(bag, 1)
       :error
 

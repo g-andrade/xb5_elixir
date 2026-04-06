@@ -184,15 +184,16 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns the immediate successor of `value` in `set`.
+  Returns the smallest element in `set` strictly greater than `value`, or `:error` if none exists.
 
-  If `set` contains an element strictly greater than `value`, it is returned as
-  `{:ok, next}`. Otherwise returns `:error`.
+  `value` does not need to be a member of `set`.
 
   ## Examples
 
       iex> Xb5.Set.higher(Xb5.Set.new([1, 2, 3]), 2)
       {:ok, 3}
+      iex> Xb5.Set.higher(Xb5.Set.new([1, 2, 3]), 1.5)
+      {:ok, 2}
       iex> Xb5.Set.higher(Xb5.Set.new([1, 2, 3]), 3)
       :error
 
@@ -262,14 +263,15 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns the immediate predecessor of `value` in `set`.
+  Returns the largest element in `set` strictly less than `value`, or `:error` if none exists.
 
-  If `set` contains an element strictly less than `value`, it is returned as
-  `{:ok, prev}`. Otherwise returns `:error`.
+  `value` does not need to be a member of `set`.
 
   ## Examples
 
       iex> Xb5.Set.lower(Xb5.Set.new([1, 2, 3]), 2)
+      {:ok, 1}
+      iex> Xb5.Set.lower(Xb5.Set.new([1, 2, 3]), 1.5)
       {:ok, 1}
       iex> Xb5.Set.lower(Xb5.Set.new([1, 2, 3]), 1)
       :error

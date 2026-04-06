@@ -423,15 +423,16 @@ defmodule Xb5.Tree do
   end
 
   @doc """
-  Returns the entry immediately following `key` in `tree` as `{next_key, value}`.
+  Returns the entry with the smallest key strictly greater than `key`, or `:error` if none exists.
 
-  If `tree` contains an entry with a key strictly greater than `key`, it is returned.
-  Otherwise returns `:error`.
+  `key` does not need to exist in `tree`.
 
   ## Examples
 
       iex> Xb5.Tree.higher(Xb5.Tree.new([a: 1, b: 2, c: 3]), :b)
       {:c, 3}
+      iex> Xb5.Tree.higher(Xb5.Tree.new([a: 1, c: 2]), :b)
+      {:c, 2}
       iex> Xb5.Tree.higher(Xb5.Tree.new([a: 1, b: 2, c: 3]), :c)
       :error
 
@@ -537,14 +538,15 @@ defmodule Xb5.Tree do
   end
 
   @doc """
-  Returns the entry immediately preceding `key` in `tree` as `{prev_key, value}`.
+  Returns the entry with the largest key strictly less than `key`, or `:error` if none exists.
 
-  If `tree` contains an entry with a key strictly less than `key`, it is returned.
-  Otherwise returns `:error`.
+  `key` does not need to exist in `tree`.
 
   ## Examples
 
       iex> Xb5.Tree.lower(Xb5.Tree.new([a: 1, b: 2, c: 3]), :b)
+      {:a, 1}
+      iex> Xb5.Tree.lower(Xb5.Tree.new([a: 1, c: 2]), :b)
       {:a, 1}
       iex> Xb5.Tree.lower(Xb5.Tree.new([a: 1, b: 2, c: 3]), :a)
       :error
@@ -1361,13 +1363,13 @@ defmodule Xb5.Tree do
 
   ##
 
-  def fetch_found(_key, value), do: {:ok, value}
-  def fetch_not_found(_key), do: :error
+  defp fetch_found(_key, value), do: {:ok, value}
+  defp fetch_not_found(_key), do: :error
 
   ##
 
-  def has_key_found(_key, _value), do: true
-  def has_key_not_found(_key), do: false
+  defp has_key_found(_key, _value), do: true
+  defp has_key_not_found(_key), do: false
 
   ##
 
