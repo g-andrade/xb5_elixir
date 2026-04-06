@@ -1,6 +1,8 @@
 # xb5_elixir
 
-[![](https://img.shields.io/hexpm/v/xb5_elixir.svg?style=flat)](https://hex.pm/packages/xb5_elixir)
+[![CI](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml/badge.svg)](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml)
+[![Elixir Versions](https://img.shields.io/badge/Supported%20Elixir-1.14%20to%201.19-blue)](https://www.erlang.org)
+[![Last commit](https://img.shields.io/github/last-commit/g-andrade/xb5_elixir.svg)](https://github.com/g-andrade/xb5_elixir/commits/main)
 
 Elixir wrapper around [xb5](https://github.com/g-andrade/xb5), an Erlang library of
 [B-tree](https://en.wikipedia.org/wiki/B-tree)-based (order 5) sorted containers.
@@ -26,6 +28,8 @@ Three modules are provided:
 
 ## Installation
 
+[![Latest version](https://img.shields.io/hexpm/v/xb5_elixir.svg?style=flat)](https://hex.pm/packages/xb5_elixir)
+
 ```elixir
 def deps do
   [
@@ -35,6 +39,8 @@ end
 ```
 
 ## Usage
+
+[![API reference](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/xb5_elixir/)
 
 ### Xb5.Bag
 
