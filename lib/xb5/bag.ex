@@ -201,19 +201,19 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the first (smallest) element in the bag. Raises `Enum.EmptyError` if the bag is empty.
+  Returns the first (smallest) element in the bag. Raises `Xb5.EmptyError` if the bag is empty.
 
   ## Examples
 
       iex> Xb5.Bag.first!(Xb5.Bag.new([1, 2, 3]))
       1
       iex> Xb5.Bag.first!(Xb5.Bag.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec first!(t(value)) :: value
   def first!(%__MODULE__{size: size, root: root}) do
-    if size === 0, do: raise(Enum.EmptyError), else: :xb5_bag_node.smallest(root)
+    if size === 0, do: raise(Xb5.EmptyError), else: :xb5_bag_node.smallest(root)
   end
 
   @doc """
@@ -300,19 +300,19 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the last (largest) element in the bag. Raises `Enum.EmptyError` if the bag is empty.
+  Returns the last (largest) element in the bag. Raises `Xb5.EmptyError` if the bag is empty.
 
   ## Examples
 
       iex> Xb5.Bag.last!(Xb5.Bag.new([1, 2, 3]))
       3
       iex> Xb5.Bag.last!(Xb5.Bag.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec last!(t(value)) :: value
   def last!(%__MODULE__{size: size, root: root}) do
-    if size === 0, do: raise(Enum.EmptyError), else: :xb5_bag_node.largest(root)
+    if size === 0, do: raise(Xb5.EmptyError), else: :xb5_bag_node.largest(root)
   end
 
   @doc """
@@ -517,7 +517,7 @@ defmodule Xb5.Bag do
 
   @doc """
   Returns the percentile rank of `value` in the bag as a float in 0.0–1.0. Runs in O(log n) time.
-  Raises `ArgumentError` if the bag is empty.
+  Raises `Xb5.EmptyError` if the bag is empty.
 
   ## Examples
 
@@ -527,7 +527,7 @@ defmodule Xb5.Bag do
       iex> Xb5.Bag.percentile_rank(bag, 1)
       0.1
       iex> Xb5.Bag.percentile_rank(Xb5.Bag.new(), 1)
-      ** (ArgumentError) bag is empty
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec percentile_rank(t(value), value) :: float
@@ -536,11 +536,11 @@ defmodule Xb5.Bag do
   end
 
   def percentile_rank(%__MODULE__{}, _value) do
-    raise ArgumentError, "bag is empty"
+    raise Xb5.EmptyError
   end
 
   @doc """
-  Removes and returns the first (smallest) element. Raises `Enum.EmptyError` if the bag is empty.
+  Removes and returns the first (smallest) element. Raises `Xb5.EmptyError` if the bag is empty.
 
   ## Examples
 
@@ -548,13 +548,13 @@ defmodule Xb5.Bag do
       iex> Xb5.Bag.pop_first!(bag)
       {1, Xb5.Bag.new([2, 3])}
       iex> Xb5.Bag.pop_first!(Xb5.Bag.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec pop_first!(t(value)) :: {value, t(value)}
   def pop_first!(%__MODULE__{size: size, root: root} = bag) do
     if size === 0 do
-      raise Enum.EmptyError
+      raise Xb5.EmptyError
     else
       [value | root] = :xb5_bag_node.take_smallest(root)
       bag = %{bag | size: size - 1, root: root}
@@ -563,7 +563,7 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Removes and returns the last (largest) element. Raises `Enum.EmptyError` if the bag is empty.
+  Removes and returns the last (largest) element. Raises `Xb5.EmptyError` if the bag is empty.
 
   ## Examples
 
@@ -571,13 +571,13 @@ defmodule Xb5.Bag do
       iex> Xb5.Bag.pop_last!(bag)
       {3, Xb5.Bag.new([1, 2])}
       iex> Xb5.Bag.pop_last!(Xb5.Bag.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec pop_last!(t(value)) :: {value, t(value)}
   def pop_last!(%__MODULE__{size: size, root: root} = bag) do
     if size === 0 do
-      raise Enum.EmptyError
+      raise Xb5.EmptyError
     else
       [value | root] = :xb5_bag_node.take_largest(root)
       bag = %{bag | size: size - 1, root: root}

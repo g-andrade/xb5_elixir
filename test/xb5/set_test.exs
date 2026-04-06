@@ -164,7 +164,7 @@ defmodule Xb5SetTest do
     test "raises on empty set, returns first element otherwise" do
       STU.foreach_test_set(fn
         0, _ref_elements, set ->
-          assert_raise Enum.EmptyError, fn -> Xb5.Set.first!(set) end
+          assert_raise Xb5.EmptyError, fn -> Xb5.Set.first!(set) end
 
         _size, ref_elements, set ->
           assert Xb5.Set.first!(set) == hd(ref_elements)
@@ -190,7 +190,7 @@ defmodule Xb5SetTest do
     test "raises on empty set, returns last element otherwise" do
       STU.foreach_test_set(fn
         0, _ref_elements, set ->
-          assert_raise Enum.EmptyError, fn -> Xb5.Set.last!(set) end
+          assert_raise Xb5.EmptyError, fn -> Xb5.Set.last!(set) end
 
         _size, ref_elements, set ->
           assert Xb5.Set.last!(set) == List.last(ref_elements)
@@ -600,7 +600,7 @@ defmodule Xb5SetTest do
   end
 
   defp run_pop_first([], set) do
-    assert_raise Enum.EmptyError, fn -> Xb5.Set.pop_first!(set) end
+    assert_raise Xb5.EmptyError, fn -> Xb5.Set.pop_first!(set) end
   end
 
   defp run_pop_last([expected | next], set) do
@@ -611,7 +611,7 @@ defmodule Xb5SetTest do
   end
 
   defp run_pop_last([], set) do
-    assert_raise Enum.EmptyError, fn -> Xb5.Set.pop_last!(set) end
+    assert_raise Xb5.EmptyError, fn -> Xb5.Set.pop_last!(set) end
   end
 
   # ---------------------------------------------------------------------------

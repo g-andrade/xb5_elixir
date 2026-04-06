@@ -168,19 +168,19 @@ defmodule Xb5.Set do
   @doc """
   Returns the first (smallest) element in `set`.
 
-  Raises `Enum.EmptyError` if `set` is empty.
+  Raises `Xb5.EmptyError` if `set` is empty.
 
   ## Examples
 
       iex> Xb5.Set.first!(Xb5.Set.new([1, 2, 3]))
       1
       iex> Xb5.Set.first!(Xb5.Set.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec first!(t(value)) :: value
   def first!(%__MODULE__{size: size, root: root}) do
-    if size === 0, do: raise(Enum.EmptyError), else: :xb5_sets_node.smallest(root)
+    if size === 0, do: raise(Xb5.EmptyError), else: :xb5_sets_node.smallest(root)
   end
 
   @doc """
@@ -246,19 +246,19 @@ defmodule Xb5.Set do
   @doc """
   Returns the last (largest) element in `set`.
 
-  Raises `Enum.EmptyError` if `set` is empty.
+  Raises `Xb5.EmptyError` if `set` is empty.
 
   ## Examples
 
       iex> Xb5.Set.last!(Xb5.Set.new([1, 2, 3]))
       3
       iex> Xb5.Set.last!(Xb5.Set.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec last!(t(value)) :: value
   def last!(%__MODULE__{size: size, root: root}) do
-    if size === 0, do: raise(Enum.EmptyError), else: :xb5_sets_node.largest(root)
+    if size === 0, do: raise(Xb5.EmptyError), else: :xb5_sets_node.largest(root)
   end
 
   @doc """
@@ -395,20 +395,20 @@ defmodule Xb5.Set do
   @doc """
   Removes and returns `{value, updated_set}` for the first (smallest) element in `set`.
 
-  Raises `Enum.EmptyError` if `set` is empty.
+  Raises `Xb5.EmptyError` if `set` is empty.
 
   ## Examples
 
       iex> Xb5.Set.pop_first!(Xb5.Set.new([1, 2, 3]))
       {1, Xb5.Set.new([2, 3])}
       iex> Xb5.Set.pop_first!(Xb5.Set.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec pop_first!(t(value)) :: {value, t(value)}
   def pop_first!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise Enum.EmptyError
+      raise Xb5.EmptyError
     else
       [value | root] = :xb5_sets_node.take_smallest(root)
       set = %{set | size: size - 1, root: root}
@@ -419,20 +419,20 @@ defmodule Xb5.Set do
   @doc """
   Removes and returns `{value, updated_set}` for the last (largest) element in `set`.
 
-  Raises `Enum.EmptyError` if `set` is empty.
+  Raises `Xb5.EmptyError` if `set` is empty.
 
   ## Examples
 
       iex> Xb5.Set.pop_last!(Xb5.Set.new([1, 2, 3]))
       {3, Xb5.Set.new([1, 2])}
       iex> Xb5.Set.pop_last!(Xb5.Set.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec pop_last!(t(value)) :: {value, t(value)}
   def pop_last!(%__MODULE__{size: size, root: root} = set) do
     if size === 0 do
-      raise Enum.EmptyError
+      raise Xb5.EmptyError
     else
       [value | root] = :xb5_sets_node.take_largest(root)
       set = %{set | size: size - 1, root: root}

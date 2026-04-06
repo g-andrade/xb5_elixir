@@ -197,19 +197,19 @@ defmodule Xb5.Tree do
   @doc """
   Returns the first (smallest-key) entry in `tree` as `{key, value}`.
 
-  Raises `Enum.EmptyError` if `tree` is empty.
+  Raises `Xb5.EmptyError` if `tree` is empty.
 
   ## Examples
 
       iex> Xb5.Tree.first!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
       {:a, 1}
       iex> Xb5.Tree.first!(Xb5.Tree.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec first!(t(key, value)) :: {key, value}
   def first!(%__MODULE__{size: size, root: root}) do
-    if size === 0, do: raise(Enum.EmptyError), else: :xb5_trees_node.smallest(root)
+    if size === 0, do: raise(Xb5.EmptyError), else: :xb5_trees_node.smallest(root)
   end
 
   @doc """
@@ -521,19 +521,19 @@ defmodule Xb5.Tree do
   @doc """
   Returns the last (largest-key) entry in `tree` as `{key, value}`.
 
-  Raises `Enum.EmptyError` if `tree` is empty.
+  Raises `Xb5.EmptyError` if `tree` is empty.
 
   ## Examples
 
       iex> Xb5.Tree.last!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
       {:c, 3}
       iex> Xb5.Tree.last!(Xb5.Tree.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec last!(t(key, value)) :: {key, value}
   def last!(%__MODULE__{size: size, root: root}) do
-    if size === 0, do: raise(Enum.EmptyError), else: :xb5_trees_node.largest(root)
+    if size === 0, do: raise(Xb5.EmptyError), else: :xb5_trees_node.largest(root)
   end
 
   @doc """
@@ -752,20 +752,20 @@ defmodule Xb5.Tree do
   @doc """
   Removes and returns `{key, value, updated_tree}` for the entry with the first (smallest) key.
 
-  Raises `Enum.EmptyError` if `tree` is empty.
+  Raises `Xb5.EmptyError` if `tree` is empty.
 
   ## Examples
 
       iex> Xb5.Tree.pop_first!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
       {:a, 1, Xb5.Tree.new([b: 2, c: 3])}
       iex> Xb5.Tree.pop_first!(Xb5.Tree.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec pop_first!(t(key, value)) :: {key, value, t(key, value)}
   def pop_first!(%__MODULE__{size: size, root: root} = tree) do
     if size === 0 do
-      raise Enum.EmptyError
+      raise Xb5.EmptyError
     else
       [[key | value] | root] = :xb5_trees_node.take_smallest(root)
       tree = %{tree | size: size - 1, root: root}
@@ -776,20 +776,20 @@ defmodule Xb5.Tree do
   @doc """
   Removes and returns `{key, value, updated_tree}` for the entry with the last (largest) key.
 
-  Raises `Enum.EmptyError` if `tree` is empty.
+  Raises `Xb5.EmptyError` if `tree` is empty.
 
   ## Examples
 
       iex> Xb5.Tree.pop_last!(Xb5.Tree.new([a: 1, b: 2, c: 3]))
       {:c, 3, Xb5.Tree.new([a: 1, b: 2])}
       iex> Xb5.Tree.pop_last!(Xb5.Tree.new())
-      ** (Enum.EmptyError) empty error
+      ** (Xb5.EmptyError) empty error
 
   """
   @spec pop_last!(t(key, value)) :: {key, value, t(key, value)}
   def pop_last!(%__MODULE__{size: size, root: root} = tree) do
     if size === 0 do
-      raise Enum.EmptyError
+      raise Xb5.EmptyError
     else
       [[key | value] | root] = :xb5_trees_node.take_largest(root)
       tree = %{tree | size: size - 1, root: root}

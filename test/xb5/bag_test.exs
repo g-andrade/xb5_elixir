@@ -226,10 +226,10 @@ defmodule Xb5BagTest do
   end
 
   describe "first!" do
-    test "raises Enum.EmptyError on empty bag, returns first element otherwise" do
+    test "raises Xb5.EmptyError on empty bag, returns first element otherwise" do
       BTU.foreach_test_bag(fn
         0, _ref_elements, bag ->
-          assert_raise Enum.EmptyError, fn -> Xb5.Bag.first!(bag) end
+          assert_raise Xb5.EmptyError, fn -> Xb5.Bag.first!(bag) end
 
         _size, ref_elements, bag ->
           assert Xb5.Bag.first!(bag) == hd(ref_elements)
@@ -252,10 +252,10 @@ defmodule Xb5BagTest do
   end
 
   describe "last!" do
-    test "raises Enum.EmptyError on empty bag, returns last element otherwise" do
+    test "raises Xb5.EmptyError on empty bag, returns last element otherwise" do
       BTU.foreach_test_bag(fn
         0, _ref_elements, bag ->
-          assert_raise Enum.EmptyError, fn -> Xb5.Bag.last!(bag) end
+          assert_raise Xb5.EmptyError, fn -> Xb5.Bag.last!(bag) end
 
         _size, ref_elements, bag ->
           assert Xb5.Bag.last!(bag) == List.last(ref_elements)
@@ -282,7 +282,7 @@ defmodule Xb5BagTest do
   end
 
   describe "pop_first!" do
-    test "raises Enum.EmptyError on empty bag, pops elements in ascending order" do
+    test "raises Xb5.EmptyError on empty bag, pops elements in ascending order" do
       BTU.foreach_test_bag(fn _size, ref_elements, bag ->
         run_pop_first(ref_elements, bag)
       end)
@@ -290,7 +290,7 @@ defmodule Xb5BagTest do
   end
 
   describe "pop_last!" do
-    test "raises Enum.EmptyError on empty bag, pops elements in descending order" do
+    test "raises Xb5.EmptyError on empty bag, pops elements in descending order" do
       BTU.foreach_test_bag(fn _size, ref_elements, bag ->
         run_pop_last(:lists.reverse(ref_elements), bag)
       end)
@@ -949,7 +949,7 @@ defmodule Xb5BagTest do
   end
 
   defp run_pop_first([], bag) do
-    assert_raise Enum.EmptyError, fn -> Xb5.Bag.pop_first!(bag) end
+    assert_raise Xb5.EmptyError, fn -> Xb5.Bag.pop_first!(bag) end
   end
 
   defp run_pop_last([expected | next], bag) do
@@ -960,7 +960,7 @@ defmodule Xb5BagTest do
   end
 
   defp run_pop_last([], bag) do
-    assert_raise Enum.EmptyError, fn -> Xb5.Bag.pop_last!(bag) end
+    assert_raise Xb5.EmptyError, fn -> Xb5.Bag.pop_last!(bag) end
   end
 
   defp run_count(ref_elements, bag) do
@@ -1239,7 +1239,7 @@ defmodule Xb5BagTest do
   defp run_percentile_rank(ref_elements, bag) do
     case ref_elements do
       [] ->
-        assert_raise ArgumentError, fn -> Xb5.Bag.percentile_rank(bag, :foobar) end
+        assert_raise Xb5.EmptyError, fn -> Xb5.Bag.percentile_rank(bag, :foobar) end
 
       [single] ->
         assert Xb5.Bag.percentile_rank(bag, single) == 0.5

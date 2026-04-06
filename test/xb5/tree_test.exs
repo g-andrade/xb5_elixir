@@ -407,7 +407,7 @@ defmodule Xb5TreeTest do
     test "raises on empty tree, returns first entry otherwise" do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
         if size == 0 do
-          assert_raise Enum.EmptyError, fn -> Xb5.Tree.first!(tree) end
+          assert_raise Xb5.EmptyError, fn -> Xb5.Tree.first!(tree) end
         else
           {expected_key, expected_value} = hd(ref_kvs)
           {actual_key, actual_value} = Xb5.Tree.first!(tree)
@@ -439,7 +439,7 @@ defmodule Xb5TreeTest do
     test "raises on empty tree, returns last entry otherwise" do
       TTU.foreach_test_tree(fn size, ref_kvs, tree ->
         if size == 0 do
-          assert_raise Enum.EmptyError, fn -> Xb5.Tree.last!(tree) end
+          assert_raise Xb5.EmptyError, fn -> Xb5.Tree.last!(tree) end
         else
           {expected_key, expected_value} = List.last(ref_kvs)
           {actual_key, actual_value} = Xb5.Tree.last!(tree)
@@ -1465,7 +1465,7 @@ defmodule Xb5TreeTest do
   end
 
   defp run_pop_first([], tree) do
-    assert_raise Enum.EmptyError, fn -> Xb5.Tree.pop_first!(tree) end
+    assert_raise Xb5.EmptyError, fn -> Xb5.Tree.pop_first!(tree) end
   end
 
   defp run_pop_last([{expected_key, expected_value} | next], tree) do
@@ -1477,7 +1477,7 @@ defmodule Xb5TreeTest do
   end
 
   defp run_pop_last([], tree) do
-    assert_raise Enum.EmptyError, fn -> Xb5.Tree.pop_last!(tree) end
+    assert_raise Xb5.EmptyError, fn -> Xb5.Tree.pop_last!(tree) end
   end
 
   # ---------------------------------------------------------------------------
