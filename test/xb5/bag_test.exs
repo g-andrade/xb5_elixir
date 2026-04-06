@@ -5,7 +5,10 @@ defmodule Xb5BagTest do
   alias Xb5BagTestUtils, as: BTU
   alias Xb5TestUtils, as: TU
 
-  doctest Xb5.Bag
+  if Version.match?(System.version(), "~> 1.19") do
+    # The format of inspected KeyError changed from 1.18
+    doctest Xb5.Bag
+  end
 
   # ---------------------------------------------------------------------------
   # Basic API

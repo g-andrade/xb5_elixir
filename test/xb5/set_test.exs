@@ -5,7 +5,10 @@ defmodule Xb5SetTest do
   alias Xb5TestUtils, as: TU
   alias Xb5SetTestUtils, as: STU
 
-  doctest Xb5.Set
+  if Version.match?(System.version(), "~> 1.19") do
+    # The format of inspected KeyError changed from 1.18
+    doctest Xb5.Set
+  end
 
   # ---------------------------------------------------------------------------
   # Basic API

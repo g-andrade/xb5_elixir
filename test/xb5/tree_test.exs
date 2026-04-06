@@ -5,7 +5,10 @@ defmodule Xb5TreeTest do
   alias Xb5TreeTestUtils, as: TTU
   alias Xb5TestUtils, as: TU
 
-  doctest Xb5.Tree
+  if Version.match?(System.version(), "~> 1.19") do
+    # The format of inspected KeyError changed from 1.18
+    doctest Xb5.Tree
+  end
 
   # ---------------------------------------------------------------------------
   # Basic API

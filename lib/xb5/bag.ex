@@ -942,18 +942,37 @@ defmodule Xb5.Bag do
   defimpl Inspect do
     import Inspect.Algebra
 
-    unless Version.match?(System.version(), "~> 1.19") do
-      defp to_doc_with_opts(term, opts), do: to_doc(term, opts)
-    end
+    if Version.match?(System.version(), "~> 1.19") do
+      # credo:disable-for-next-line Credo.Check.Readability.Specs
+      def inspect(bag, %Inspect.Opts{} = opts) do
+        {doc, %{limit: limit}} =
+          bag
+          |> Xb5.Bag.to_list()
+          |> to_doc_with_opts(%{opts | charlists: :as_lists})
 
-    # credo:disable-for-next-line Credo.Check.Readability.Specs
-    def inspect(bag, %Inspect.Opts{} = opts) do
-      {doc, %{limit: limit}} =
-        bag
-        |> Xb5.Bag.to_list()
-        |> to_doc_with_opts(%{opts | charlists: :as_lists})
+        {concat(["Xb5.Bag.new(", doc, ")"]), %{opts | limit: limit}}
+      end
+    else
+      # credo:disable-for-next-line Credo.Check.Readability.Specs
+      def inspect(bag, %Inspect.Opts{} = opts) do
+        limit = limit_override(opts)
 
-      {concat(["Xb5.Bag.new(", doc, ")"]), %{opts | limit: limit}}
+        doc =
+          bag
+          |> Xb5.Bag.to_list()
+          |> to_doc(%{opts | limit: limit, charlists: :as_lists})
+
+        concat(["Xb5.Bag.new(", doc, ")"])
+      end
+
+      if Mix.env() === :test do
+        # Tests that assert_raise KeyError become incredibly slow otherwise. I
+        # think this is because KeyError includes the tree term, which is then
+        # inspected for the purposes of rendering the exception message.
+        defp limit_override(_), do: 5
+      else
+        defp limit_override(opts), do: opts.limit
+      end
     end
   end
 end
