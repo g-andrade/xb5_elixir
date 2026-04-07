@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml/badge.svg)](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml)
 [![Elixir Versions](https://img.shields.io/badge/Supported%20Elixir-1.14%20to%201.19-blue)](https://elixir-lang.org/)
+[![Latest version](https://img.shields.io/hexpm/v/xb5_elixir.svg?style=flat)](https://hex.pm/packages/xb5_elixir)
+[![API reference](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/xb5_elixir/)
 [![Last commit](https://img.shields.io/github/last-commit/g-andrade/xb5_elixir.svg)](https://github.com/g-andrade/xb5_elixir/commits/main)
 
 Elixir wrapper around [xb5](https://hexdocs.pm/xb5/), an Erlang library of
@@ -9,11 +11,8 @@ Elixir wrapper around [xb5](https://hexdocs.pm/xb5/), an Erlang library of
 Provides idiomatic Elixir structs with full `Enumerable`, `Collectable`, and `Inspect`
 support.
 
-If you need ordered collections,
-[benchmarks](https://github.com/g-andrade/xb5_benchmark) show `xb5` running
-[**1.2–2.5×
-faster**](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
-than Erlang/OTP's
+If you need ordered collections, benchmarks show `xb5` running [**1.2–2.5×
+faster**](#benchmarks) than Erlang/OTP's
 [`gb_sets`](https://www.erlang.org/doc/apps/stdlib/gb_sets.html) and
 [`gb_trees`](https://www.erlang.org/doc/apps/stdlib/gb_trees.html) for most
 operations, with equal or lower heap usage — gains that largely carry over to
@@ -30,7 +29,7 @@ Three modules are provided:
 
 ## Installation
 
-[![Latest version](https://img.shields.io/hexpm/v/xb5_elixir.svg?style=flat)](https://hex.pm/packages/xb5_elixir)
+Available on [Hex](https://hex.pm/packages/xb5_elixir) · [API docs](https://hexdocs.pm/xb5_elixir/)
 
 ```elixir
 def deps do
@@ -41,8 +40,6 @@ end
 ```
 
 ## Usage
-
-[![API reference](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/xb5_elixir/)
 
 ### Xb5.Bag
 
@@ -92,7 +89,7 @@ on one element, or `{:between, lo, hi, t}` when it falls between two — where
 
 ### Xb5.Set
 
-An ordered set. Supports all standard set operations and efficient traversal in sorted order.
+An ordered set. Its API closely mirrors `MapSet`.
 
 ```elixir
 iex> set = Xb5.Set.new([3, 1, 2, 1])
@@ -243,11 +240,13 @@ iex> Xb5.Set.unwrap!(elixir_set).size
 
 ## Benchmarks
 
-See the [xb5 benchmark report](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
-for detailed comparisons against `gb_sets`/`gb_trees` across 50+ operations and collection
-sizes up to 15,000 elements. A second report on an
-[Intel i5-3550](https://www.gandrade.net/xb5_benchmark/report_intel_i5_3550.html) is also
-available.
+See the [xb5 benchmark
+report](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
+for detailed comparisons against `gb_sets`/`gb_trees` across [50+
+operations](https://github.com/g-andrade/xb5_benchmark) and collection sizes up
+to 15,000 elements. A second report on an [Intel
+i5-3550](https://www.gandrade.net/xb5_benchmark/report_intel_i5_3550.html) is
+also available.
 
 ## License
 

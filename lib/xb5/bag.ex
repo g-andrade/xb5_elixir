@@ -1,6 +1,8 @@
 defmodule Xb5.Bag do
   @moduledoc """
-  An ordered multiset (bag) backed by a [B-tree](https://en.wikipedia.org/wiki/B-tree) of order 5.
+  An ordered [multiset](https://en.wikipedia.org/wiki/Multiset) (bag) backed by
+  a [B-tree](https://en.wikipedia.org/wiki/B-tree) of order 5.
+
 
   Unlike a set, a bag allows duplicate values — the same value may appear multiple times.
   Elements are kept in ascending Erlang term order. Comparisons use `==` rather than `===` —
@@ -17,18 +19,24 @@ defmodule Xb5.Bag do
 
   In addition to standard collection operations, `Xb5.Bag` provides:
 
+    * `at/2` — O(log n) element access by index.
     * `index_of/2`, `index_of!/2` — 0-based index of a value.
     * `percentile/3`, `percentile_bracket/3` — percentile queries.
     * `percentile_rank/2` — the percentile position of a value.
 
-  Conversion to a sorted list via `to_list/1` always yields elements in ascending order,
-  with duplicates preserved.
+  Conversion to a list via `to_list/1` always yields elements in ascending
+  order, with duplicates preserved.
 
   ## Erlang interop
 
   `Xb5.Bag` is compatible with the Erlang `:xb5_bag` module. Build one from an `:xb5_bag`
   term via `new/1`. To go the other way, call `unwrap!/1` to extract the size and root node,
   then pass the result to `:xb5_bag.wrap/1`.
+
+  ## See also
+
+    * `Xb5.Set` — ordered set, for unique elements and set-algebraic operations.
+    * `Xb5.Tree` — ordered key-value store.
 
   ## Examples
 
@@ -133,13 +141,13 @@ defmodule Xb5.Bag do
 
   """
   @spec delete(t(val1), val2) :: t(val1) when val1: value(), val2: value()
-  def delete(%__MODULE__{size: size, root: root} = set, value) do
+  def delete(%__MODULE__{size: size, root: root} = bag, value) do
     case :xb5_bag_node.delete_att(value, root) do
       :badkey ->
-        set
+        bag
 
       root ->
-        %{set | size: size - 1, root: root}
+        %{bag | size: size - 1, root: root}
     end
   end
 
@@ -176,8 +184,8 @@ defmodule Xb5.Bag do
 
   """
   @spec filter(t(a), (a -> as_boolean(term()))) :: t(a) when a: value()
-  def filter(set, fun) do
-    from_ordered_list(for elem <- to_list(set), fun.(elem), do: elem)
+  def filter(bag, fun) do
+    from_ordered_list(for elem <- to_list(bag), fun.(elem), do: elem)
   end
 
   @doc """
@@ -217,7 +225,8 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the smallest element strictly greater than `value`, or `:error` if none exists.
+  Returns the smallest element strictly greater (larger) than `value`, or
+  `:error` if none exists.
 
   `value` does not need to be a member of the bag.
 
@@ -320,7 +329,8 @@ defmodule Xb5.Bag do
   end
 
   @doc """
-  Returns the largest element strictly less than `value`, or `:error` if none exists.
+  Returns the largest element strictly less (smaller) than `value`, or `:error`
+  if none exists.
 
   `value` does not need to be a member of the bag.
 
@@ -606,9 +616,9 @@ defmodule Xb5.Bag do
 
   """
   @spec push(t(value), new_value) :: t(value | new_value) when new_value: value()
-  def push(%__MODULE__{size: size, root: root} = set, value) do
+  def push(%__MODULE__{size: size, root: root} = bag, value) do
     root = :xb5_bag_node.push(value, root)
-    %{set | size: size + 1, root: root}
+    %{bag | size: size + 1, root: root}
   end
 
   @doc """
@@ -624,13 +634,13 @@ defmodule Xb5.Bag do
 
   """
   @spec put(t(value), new_value) :: t(value | new_value) when new_value: value()
-  def put(%__MODULE__{size: size, root: root} = set, value) do
+  def put(%__MODULE__{size: size, root: root} = bag, value) do
     case :xb5_bag_node.insert_att(value, root) do
       :key_exists ->
-        set
+        bag
 
       root ->
-        %{set | size: size + 1, root: root}
+        %{bag | size: size + 1, root: root}
     end
   end
 
@@ -647,8 +657,8 @@ defmodule Xb5.Bag do
 
   """
   @spec reject(t(a), (a -> as_boolean(term()))) :: t(a) when a: value()
-  def reject(set, fun) do
-    from_ordered_list(for elem <- to_list(set), !fun.(elem), do: elem)
+  def reject(bag, fun) do
+    from_ordered_list(for elem <- to_list(bag), !fun.(elem), do: elem)
   end
 
   @doc """
@@ -967,7 +977,7 @@ defmodule Xb5.Bag do
 
       if Mix.env() === :test do
         # Tests that assert_raise KeyError become incredibly slow otherwise. I
-        # think this is because KeyError includes the tree term, which is then
+        # think this is because KeyError includes the bag term, which is then
         # inspected for the purposes of rendering the exception message.
         defp limit_override(_), do: 5
       else

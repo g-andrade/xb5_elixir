@@ -5,25 +5,16 @@ defmodule Xb5.Tree do
   Keys are kept in ascending Erlang term order. Comparisons use `==` rather than `===` —
   so key `1` and key `1.0` are treated as the same key, unlike `Map`.
 
-  ## Comparison with `Map`
-
-  `Xb5.Tree` supports the same operations as `Map` — `get/3`, `put/3`, `delete/2`,
-  `update/4`, `merge/2`, and so on — and additionally offers O(log n) access to ordered
-  extremes and neighbors:
-
-    * `first/2`, `last/2` — return the min/max entry, or a default.
-    * `first!/1`, `last!/1` — return the min/max entry, raising on empty.
-    * `higher/2`, `lower/2` — find the nearest entry above or below a given key.
-    * `pop_first!/1`, `pop_last!/1` — remove and return endpoint entries.
-
-  Conversion to a sorted list of `{key, value}` pairs via `to_list/1` always yields
-  entries in ascending key order.
-
   ## Erlang interop
 
   `Xb5.Tree` is compatible with the Erlang `:xb5_trees` module. Build one from an
   `:xb5_trees` term via `new/1`. To go the other way, call `unwrap!/1` to extract the
   size and root node, then pass the result to `:xb5_trees.wrap/1`.
+
+  ## See also
+
+    * `Xb5.Bag` — ordered multiset with order-statistic operations (percentile, rank)
+    * `Xb5.Set` — ordered set, for unique elements and set-algebraic operations.
 
   ## Examples
 
@@ -423,7 +414,8 @@ defmodule Xb5.Tree do
   end
 
   @doc """
-  Returns the entry with the smallest key strictly greater than `key`, or `:error` if none exists.
+  Returns the entry with the smallest key strictly greater (larger) than `key`,
+  or `:error` if none exists.
 
   `key` does not need to exist in `tree`.
 
@@ -538,7 +530,8 @@ defmodule Xb5.Tree do
   end
 
   @doc """
-  Returns the entry with the largest key strictly less than `key`, or `:error` if none exists.
+  Returns the entry with the largest key strictly less (smaller) than `key`, or
+  `:error` if none exists.
 
   `key` does not need to exist in `tree`.
 

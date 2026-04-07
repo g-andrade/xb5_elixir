@@ -6,24 +6,19 @@ defmodule Xb5.Set do
   Comparisons use `==` rather than `===` — so `1` and `1.0` are treated as the same
   element, unlike `MapSet`.
 
-  ## Comparison with `MapSet`
-
-  `Xb5.Set` supports the same operations as `MapSet` — `union/2`, `intersection/2`,
-  `difference/2`, `subset?/2`, and so on — and additionally offers O(log n) access to
-  ordered extremes and neighbors:
-
-    * `first/2`, `last/2` — return the min/max element, or a default.
-    * `first!/1`, `last!/1` — return the min/max element, raising on empty.
-    * `higher/2`, `lower/2` — find the nearest element above or below a given value.
-    * `pop_first!/1`, `pop_last!/1` — remove and return endpoint elements.
-
-  Conversion to a sorted list via `to_list/1` always yields elements in ascending order.
+  Conversion to a list via `to_list/1` always yields elements in ascending
+  order.
 
   ## Erlang interop
 
   `Xb5.Set` is compatible with the Erlang `:xb5_sets` module. Build one from an
   `:xb5_sets` term via `new/1`. To go the other way, call `unwrap!/1` to extract the
   size and root node, then pass the result to `:xb5_sets.wrap/1`.
+
+  ## See also
+
+    * `Xb5.Bag` — ordered multiset with order-statistic operations (percentile, rank)
+    * `Xb5.Tree` — ordered key-value store.
 
   ## Examples
 
@@ -184,7 +179,8 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns the smallest element in `set` strictly greater than `value`, or `:error` if none exists.
+  Returns the smallest element in `set` strictly greater (larger) than `value`,
+  or `:error` if none exists.
 
   `value` does not need to be a member of `set`.
 
@@ -263,7 +259,8 @@ defmodule Xb5.Set do
   end
 
   @doc """
-  Returns the largest element in `set` strictly less than `value`, or `:error` if none exists.
+  Returns the largest element in `set` strictly less (smaller) than `value`, or
+  `:error` if none exists.
 
   `value` does not need to be a member of `set`.
 
@@ -837,7 +834,7 @@ defmodule Xb5.Set do
 
       if Mix.env() === :test do
         # Tests that assert_raise KeyError become incredibly slow otherwise. I
-        # think this is because KeyError includes the tree term, which is then
+        # think this is because KeyError includes the set term, which is then
         # inspected for the purposes of rendering the exception message.
         defp limit_override(_), do: 5
       else
