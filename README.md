@@ -1,15 +1,17 @@
 # xb5_elixir
 
 [![CI](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml/badge.svg)](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml)
-[![Elixir Versions](https://img.shields.io/badge/Supported%20Elixir-1.14%20to%201.19-blue)](https://www.erlang.org)
+[![Elixir Versions](https://img.shields.io/badge/Supported%20Elixir-1.14%20to%201.19-blue)](https://elixir-lang.org/)
 [![Last commit](https://img.shields.io/github/last-commit/g-andrade/xb5_elixir.svg)](https://github.com/g-andrade/xb5_elixir/commits/main)
 
-Elixir wrapper around [xb5](https://github.com/g-andrade/xb5), an Erlang library of
+Elixir wrapper around [xb5](https://hexdocs.pm/xb5/), an Erlang library of
 [B-tree](https://en.wikipedia.org/wiki/B-tree)-based (order 5) sorted containers.
 Provides idiomatic Elixir structs with full `Enumerable`, `Collectable`, and `Inspect`
 support.
 
-If you need ordered collections, benchmarks show `xb5` running [**1.2–2.5×
+If you need ordered collections,
+[benchmarks](https://github.com/g-andrade/xb5_benchmark) show `xb5` running
+[**1.2–2.5×
 faster**](https://www.gandrade.net/xb5_benchmark/report_amd_ryzen7_5700g.html)
 than Erlang/OTP's
 [`gb_sets`](https://www.erlang.org/doc/apps/stdlib/gb_sets.html) and
