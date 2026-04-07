@@ -34,7 +34,7 @@ Available on [Hex](https://hex.pm/packages/xb5_elixir) · [API docs](https://hex
 ```elixir
 def deps do
   [
-    {:xb5_elixir, "~> 0.1"}
+    {:xb5_elixir, "~> 1.0"}
   ]
 end
 ```

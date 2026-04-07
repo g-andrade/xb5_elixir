@@ -1,7 +1,7 @@
 defmodule Xb5.MixProject do
   use Mix.Project
 
-  @version "0.1.0-rc.1"
+  @version "1.0.0"
   @source_url "https://github.com/g-andrade/xb5_elixir"
 
   def project do
@@ -11,7 +11,7 @@ defmodule Xb5.MixProject do
       app: :xb5_elixir,
       version: @version,
       description: description(),
-      elixir: "~> 1.7",
+      elixir: "~> 1.14",
       start_permanent: mix_env === :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(mix_env),
@@ -35,7 +35,7 @@ defmodule Xb5.MixProject do
     List.flatten([
       {:ex_doc, "~> 0.30", only: :dev, runtime: false},
       {:recon, "~> 2.5", only: [:dev, :test], runtime: false},
-      {:xb5, "0.1.0-rc.3"},
+      {:xb5, "~> 1.0"},
       maybe_credo_dep(),
       maybe_dialyxir_dep(),
       maybe_styler_dep()
