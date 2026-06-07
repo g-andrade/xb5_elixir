@@ -1,7 +1,7 @@
 # xb5_elixir
 
 [![CI](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml/badge.svg)](https://github.com/g-andrade/xb5_elixir/actions/workflows/ci.yml)
-[![Elixir Versions](https://img.shields.io/badge/Supported%20Elixir-1.14%20to%201.19-blue)](https://elixir-lang.org/)
+[![Elixir Versions](https://img.shields.io/badge/Supported%20Elixir-1.14%20to%201.20-blue)](https://elixir-lang.org/)
 [![Latest version](https://img.shields.io/hexpm/v/xb5_elixir.svg?style=flat)](https://hex.pm/packages/xb5_elixir)
 [![API reference](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/xb5_elixir/)
 [![Last commit](https://img.shields.io/github/last-commit/g-andrade/xb5_elixir.svg)](https://github.com/g-andrade/xb5_elixir/commits/main)
