@@ -48,7 +48,7 @@ jobs:
         os: ['ubuntu-22.04']
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - id: elixir-version-to-otp-version
         name: "Read %{Elixir version => OTP version} map"
@@ -77,7 +77,7 @@ jobs:
           echo "BUILD_CACHE_PREFIX_WITH_HASH=${{env.BUILD_CACHE_PREFIX}}-hash-${{hashFiles('mix.lock')}}" >> "$GITHUB_ENV"
 
       - name: Restore cached build artifacts
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: |
             _build
@@ -112,7 +112,7 @@ jobs:
         # We always save to cache, even on failure, so that whatever artifacts
         # took a long time to generate are kept (looking at you, Dialyzer PLT)
         if: always()
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: |
             _build
